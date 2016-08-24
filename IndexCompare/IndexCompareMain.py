@@ -1,15 +1,19 @@
-# -*- coding: <encoding name> -*-
+# -*- coding: utf-8 -*-
+import IndexCompareURLManager
+import IndexCompareDownloader
+import IndexCompareOutputer
+import IndexCompareParser
 
 class IndexCompareMain:
     def __init__(self):
-        print 'init'
-        pass
+        self._url_manager = IndexCompareURLManager()
 
-    def startWithHomeURL(self, homeURL):
-        print 'startWithHomeURL' + homeURL
-        pass
 
+    def craw(self, homeurl):
+        self._url_manager.add_url(homeurl)
+        while (not self._url_manager.is_empty):
+            pass
 
 if __name__ == "__main__":
     icMain = IndexCompareMain()
-    icMain.startWithHomeURL('http://fund.eastmoney.com/allfund.html')
+    icMain.craw('http://fund.eastmoney.com/allfund.html')
