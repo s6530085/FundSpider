@@ -6,10 +6,12 @@ import IndexCompareParser
 
 class IndexCompareMain:
     def __init__(self):
-        self._url_manager = IndexCompareURLManager()
+        self.url_manager = IndexCompareURLManager()
 
 
     def craw(self, homeurl):
+
+        #首页和详情页的解析稍有区别,
         self._url_manager.add_url(homeurl)
         while (not self._url_manager.is_empty):
             pass
