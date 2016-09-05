@@ -3,7 +3,7 @@
 class IndexCompareOutputer:
 
     def collect_data(self, data):
-        pass
+        self.raw_data = data
 
     def output_result(self):
-        pass
+        print self.raw_data
