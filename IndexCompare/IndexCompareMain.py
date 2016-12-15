@@ -29,9 +29,10 @@ class IndexCompareMain:
             (code, name) = fund_info
             #其实name根本没用到
             self.url_manager.add_url('http://fund.eastmoney.com/f10/jbgk_' + code + '.html')
-
+        # self.url_manager.add_url("http://fund.eastmoney.com/f10/jbgk_585001.html")
         while (not self.url_manager.is_empyt() and not self.url_manager.is_overflow()):
             url = self.url_manager.pop_url()
+            print 'start parse ' + url
             content = self.html_downloader.download(url)
             if content is None:
                 print 'download' + url + 'failed'
@@ -42,7 +43,7 @@ class IndexCompareMain:
             self.collector.addFund(result)
             print 'finish parse url ' + url
 
-        self.collector.chooseTargets([u"无跟踪标"])
+        self.collector.chooseTargets([u"药", u"医"])
         # self.outputer.output_result()
 
 

@@ -37,6 +37,8 @@ class FundInfo:
     policy = u''
     POLICY_KEY = u'投资策略'
 
+    url = u""
+
     #所有资讯都放在里面,键也是直接使用资讯的中文了嘻嘻
     raw_info = dict()
 
@@ -67,7 +69,9 @@ class FundInfo:
                     self.release_time = value
                 #去掉后面单位和描述只保留数字
                 elif key == self.CAPACITY_KEY:
-                    value = value.split(u'亿')[0]
+                    #某些基金新开或者其他原因没有规模
+                    if len(value.split(u'亿')) > 0:
+                        value = value.split(u'亿')[0]
                     self.capacity = value
                     self.raw_info[key] = value
                 #这里是个超链接
@@ -123,4 +127,5 @@ class IndexCompareParser:
             return None
 
         fund_info = FundInfo(fund_content)
+        fund_info.url = fund_url
         return fund_info
