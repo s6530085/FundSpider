@@ -7,3 +7,4 @@ class IndexCompareOutputer:
 
     def output_result(self):
         print self.raw_data
+

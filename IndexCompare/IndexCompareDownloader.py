@@ -12,4 +12,5 @@ class IndexCompareDownloader:
         if response.getcode() != 200:
             return None
 
+        # 不好直接在这里设置编码,谁知道这个网页到底是什么编码呢
         return response.read()

@@ -16,11 +16,14 @@ class IndexCompareURLManager:
 
     # 加可以批量加,但移除肯定是一个个移除的
     def finish_url(self, url):
-        self.feed_urls.remove(url)
+        self.feed_urls.discard(url)
         self.finished_urls.add(url)
 
     def is_empyt(self):
-        return self.feed_urls
+        return len(self.feed_urls) == 0
+
+    def is_overflow(self):
+        return len(self.finished_urls) >= 2
 
     def pop_url(self):
         return self.feed_urls.pop()
