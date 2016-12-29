@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-class IndexCompareURLManager:
+class IndexCompareURLManager(object):
 
     def __init__(self):
         self.finished_urls = set()

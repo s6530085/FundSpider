@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-class IndexCompareOutputer:
+class IndexCompareOutputer(object):
 
     def collect_data(self, data):
         self.raw_data = data

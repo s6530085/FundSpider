@@ -6,27 +6,12 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-class IndexCompareCollector(object):
+#数据库的分析器,前提是数据库已经下载好了,所以先要运行main
+class IndexCompareAnalysis(object):
 
     def __init__(self):
         self.db = sqlite3.connect('test.db')
-        self.db.execute('''
-        create table if not exists fundinfo (
-        code text not null,
-        name text not null,
-        url text not null,
-        target text not null,
-        policy text not null
-        );
-        ''')
 
-    def addFund(self, fundInfo):
-        # value = u'{},{},{},{}'.format(fundInfo.code, fundInfo.full_name, fundInfo.trace_target, fundInfo.policy)
-        self.db.execute('''
-        insert into fundinfo (code, name, target, policy, url)
-        values ('{0}', '{1}', '{2}', '{3}', '{4}');
-        '''.format(fundInfo.code, fundInfo.full_name, fundInfo.trace_target, fundInfo.policy, fundInfo.url))
-        self.db.commit()
 
     def chooseTargets(self, targets):
         like = u""
@@ -44,9 +29,19 @@ class IndexCompareCollector(object):
         for item in result:
             print u'{}, 基金代码 {}, 网址 {}'.format(item[0], item[1], item[2])
 
-    def choosePolicys(self, policys):
-        pass
+    def queryfund(self, code):
+        result = self.db.execute('''
+        select target from fundinfo where code == '{}'
+        '''.format(code))
+        for item in result:
+            print item
 
     def __del__( self ):
         if self.db != None:
             self.db.close()
+
+
+if __name__ == "__main__":
+    a = IndexCompareAnalysis()
+    # a.chooseTargets([u"医", u"药"])
+    a.queryfund(u"001550")
