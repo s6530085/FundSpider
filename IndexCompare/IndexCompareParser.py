@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import re
 from lxml import etree
+import sys
 
-
+reload(sys)
+sys.setdefaultencoding('utf-8')
 class FundInfo(object):
     #一些我比较感兴趣的资讯参数
     code = u''
@@ -132,16 +134,18 @@ class IndexCompareParser(object):
     def parse_home(self, home_content):
         if home_content is None:
             return None
-        html = etree.HTML(home_content, parser=etree.HTMLParser(encoding='gb2312'))
-        html.xpath('')
-        pattern_match = re.compile(ur"（\d{6}）.+")
+        home_content = home_content.decode('gbk')
+        html = etree.HTML(home_content, parser=etree.HTMLParser(encoding='utf-8'))
+        alinks = html.xpath('//a[@href]')
+
         pattern_capture = re.compile(ur"（(\d{6})）(.+)")
-        funds = soup.find_all('a', text=pattern_match)
         l = []
-        for fund in funds:
-            match = pattern_capture.match(fund.text)
-            if match:
-                l.append((match.group(1), match.group(2)))
+        for alink in alinks:
+            aa = alink.text
+            if aa != None:
+                match = pattern_capture.match(aa)
+                if match:
+                    l.append((match.group(1), match.group(2)))
 
         return l
 

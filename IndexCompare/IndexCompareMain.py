@@ -15,21 +15,21 @@ class IndexCompareMain(object):
     #先定接口，再做实现，其中首页特殊处理一下
     def craw(self, homeurl):
         #先处理首页
-        # home_content = self.html_downloader.download(homeurl)
-        # if home_content is None:
-        #     return
-        #
-        # funds_info = self.html_paser.parse_home(home_content)
-        # if funds_info is None:
-        #     return
-        #
-        # count = 0
-        # for fund_info in funds_info:
-        #     (code, name) = fund_info
-        #     #其实name根本没用到
-        #     self.url_manager.add_url('http://fund.eastmoney.com/f10/jbgk_' + code + '.html')
-        #     count = count + 1
-        self.url_manager.add_url("http://fund.eastmoney.com/f10/jbgk_001550.html")
+        home_content = self.html_downloader.download(homeurl)
+        if home_content is None:
+            return
+
+        funds_info = self.html_paser.parse_home(home_content)
+        if funds_info is None:
+            return
+
+        count = 0
+        for fund_info in funds_info:
+            (code, name) = fund_info
+            #其实name根本没用到
+            self.url_manager.add_url('http://fund.eastmoney.com/f10/jbgk_' + code + '.html')
+            count = count + 1
+        # self.url_manager.add_url("http://fund.eastmoney.com/f10/jbgk_001550.html")
         # print '共需爬取基金详情 ' + str(count) + " 个"
         while (not self.url_manager.is_empyt() and not self.url_manager.is_overflow()):
             try:
