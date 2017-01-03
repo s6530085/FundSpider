@@ -14,7 +14,7 @@ class IndexCompareMain(object):
 
     #先定接口，再做实现，其中首页特殊处理一下
     def craw(self, homeurl):
-        #先处理首页
+        # 先处理首页
         home_content = self.html_downloader.download(homeurl)
         if home_content is None:
             return
@@ -29,8 +29,9 @@ class IndexCompareMain(object):
             #其实name根本没用到
             self.url_manager.add_url('http://fund.eastmoney.com/f10/jbgk_' + code + '.html')
             count = count + 1
-        # self.url_manager.add_url("http://fund.eastmoney.com/f10/jbgk_001550.html")
-        # print '共需爬取基金详情 ' + str(count) + " 个"
+        # self.url_manager.add_url("http://fund.eastmoney.com/f10/jbgk_001669.html")
+        print '共需爬取基金详情 ' + str(count) + " 个"
+        finished_count = 0
         while (not self.url_manager.is_empyt() and not self.url_manager.is_overflow()):
             try:
                 url = self.url_manager.pop_url()
@@ -43,11 +44,11 @@ class IndexCompareMain(object):
                 self.url_manager.finish_url(url)
                 result = self.html_paser.parse_fund(content, url)
                 self.collector.addFund(result)
-                print 'finish parse url ' + url
+                finished_count = finished_count + 1
+                print 'finish parse url ' + url + " " + str(finished_count) + '/' + str(count)
             except Exception as e:
                 print e
-
-        self.collector.chooseTargets([u"药", u"医"])
+        print 'success finish parse url sum ' + str(finished_count)
 
 if __name__ == "__main__":
     icMain = IndexCompareMain()

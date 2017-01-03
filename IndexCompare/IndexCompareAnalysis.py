@@ -2,7 +2,7 @@
 __author__ = 'study_sun'
 import sqlite3
 import sys
-
+from IndexCompareParser import FundInfo
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -17,9 +17,9 @@ class IndexCompareAnalysis(object):
         like = u""
         for (index, target) in enumerate(targets):
             if index < len(targets) - 1:
-                like = like + u"target like '%{}%' or ".format(target)
+                like = like + u"track like '%{}%' or ".format(target)
             else:
-                like = like + u"target like '%{}%'".format(target)
+                like = like + u"track like '%{}%'".format(target)
 
         result = self.db.execute('''
         select name, code, url from fundinfo where {};
@@ -31,7 +31,7 @@ class IndexCompareAnalysis(object):
 
     def queryfund(self, code):
         result = self.db.execute('''
-        select target from fundinfo where code == '{}'
+        select * from fundinfo where code == '{}'
         '''.format(code))
         for item in result:
             print item
@@ -42,6 +42,8 @@ class IndexCompareAnalysis(object):
 
 
 if __name__ == "__main__":
-    a = IndexCompareAnalysis()
+    # a = IndexCompareAnalysis()
     # a.chooseTargets([u"医", u"药"])
-    a.queryfund(u"001550")
+    # a.queryfund(u"001550")
+    t = FundInfo()
+    print t

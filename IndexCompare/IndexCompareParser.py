@@ -5,8 +5,9 @@ import sys
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
+
 class FundInfo(object):
-    #一些我比较感兴趣的资讯参数
+    #一些我比较感兴趣的资讯参数,默认大写的是类变量,小写的是成员变量
     code = u''
     CODE_KEY = u'基金代码'
 
@@ -22,8 +23,8 @@ class FundInfo(object):
     release_time = u''
     RELEASE_TIME_KEY = u'发行日期'
 
-    capacity = u''
-    CAPACITY_KEY = u'资产规模'
+    size = u''
+    SIZE_KEY = u'资产规模'
 
     company = u''
     COMPANY_KEY = u'基金管理人'
@@ -34,18 +35,32 @@ class FundInfo(object):
     compare_target = u''
     COMPARE_TARGET_KEY = u'业绩比较基准'
 
-    trace_target = u''
-    TARCE_TARGET_KEY = u'跟踪标的'
+    track_target = u''
+    TRACK_TARGET_KEY = u'跟踪标的'
 
-    policy = u''
-    POLICY_KEY = u'投资策略'
+    limits = u''
+    LIMITS_KEY = u'投资范围'
+
+    tactics = u''
+    TACTICS_KEY = u'投资策略'
 
     url = u""
 
     #所有资讯都放在里面,键也是直接使用资讯的中文了嘻嘻
     raw_info = dict()
 
-    def __init__(self, content):
+    #由数据构造
+    # def __init__(self, info=()):
+    #     self.code = info[0]
+
+    def __str__(self):
+        return u'{} is {}, {} is {}, {} is {}, {} is {}, {} is {}, {} is {}, {} is {}, {} is {}, {} is {}, {} is {}'.format(FundInfo.CODE_KEY, self.code, FundInfo.FULL_NAME_KEY, self.full_name)
+
+    def __init__(self):
+        pass
+
+
+    def parse_content(self, content=""):
         html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
         ths = html.xpath('//table//th')
         tds = html.xpath('//table//td')
@@ -55,43 +70,49 @@ class FundInfo(object):
                 continue
             if tds[index].text == None:
                 alist = tds[index].xpath('./a')
-                if alist != None and len(alist) > 0:
-                    value = alist[0].text.strip()
+                if len(alist) > 0:
+                    if alist[0].text != None:
+                        value = alist[0].text.strip()
+                    else:
+                        value = u""
                 else:
                     #这里有些比如最高申购费什么的
                     spans = tds[index].xpath('./span')
-                    if spans != None:
-                        value = spans[len(spans)-1].text.strip()
+                    if len(spans) > 0:
+                        if spans[len(spans)-1].text != None:
+                            value = spans[len(spans)-1].text.strip()
+                        else:
+                            value = u""
                     else:
                         value = u""
             else:
                 value = tds[index].text.strip()
             self.raw_info[key] = value
 
-            if key == self.CODE_KEY:
+            if key == FundInfo.CODE_KEY:
                 #code也分前后端等,懒得管了,就取第一个
                 value = value[:6]
                 self.code = value
                 self.raw_info[key] = value
-            elif key == self.SHORT_NAME_KEY:
+            elif key == FundInfo.SHORT_NAME_KEY:
                 self.short_name = value
-            elif key == self.FULL_NAME_KEY:
+            elif key == FundInfo.FULL_NAME_KEY:
                 self.full_name = value
-            elif key == self.TYPE_KEY:
+            elif key == FundInfo.TYPE_KEY:
                 self.type = value
-            elif key == self.RELEASE_TIME_KEY:
+            elif key == FundInfo.RELEASE_TIME_KEY:
                 self.release_time = value
             #去掉后面单位和描述只保留数字
-            elif key == self.CAPACITY_KEY:
+            elif key == FundInfo.SIZE_KEY:
                 #某些基金新开或者其他原因没有规模
                 if len(value.split(u'亿')) > 0:
                     value = value.split(u'亿')[0]
-                self.capacity = value
+                self.size = value
                 self.raw_info[key] = value
             #这里是个超链接
-            elif key == self.COMPANY_KEY:
+            elif key == FundInfo.COMPANY_KEY:
                 self.company = value
-            elif key == self.MANAGER_KEY:
+            elif key == FundInfo.MANAGER_KEY:
                 value = []
                 #特别处理下基金经理这块,因为可能是多人,其实还可能有重名的情况,不过暂且相信一个基金公司下的基金经理不会重名吧
                 managers = tds[index].xpath('./a')
@@ -99,13 +120,13 @@ class FundInfo(object):
                     value.append(managerName.text.strip())
                 self.raw_info[key] = value
                 self.manager = value
-            elif key == self.COMPARE_TARGET_KEY:
+            elif key == FundInfo.COMPARE_TARGET_KEY:
                 self.compare_target = value
-            elif key == self.TARCE_TARGET_KEY:
-                self.trace_target = value
+            elif key == FundInfo.TRACK_TARGET_KEY:
+                self.track_target = value
 
         #然后是几个大的
-        divs = html.xpath('//div[@class="boxitem w790"]//label[@class="left"]')
+        divs = html.xpath(u'//div[@class="boitem w790"]//h4//label[@class="left" and text() != "基金分级信息"]')
         ps = html.xpath('//div[@class="boxitem w790"]//p')
         for (index, div) in enumerate(divs):
             key = div.text.strip()
@@ -114,18 +135,10 @@ class FundInfo(object):
                 continue
             value = ps[index].text.strip()
             self.raw_info[key] = value
-            if key == self.POLICY_KEY:
-                self.policy = value
-        # large_divs = soup.find_all('div', {"class" : "boxitem w790"})
-        # for large_div in large_divs:
-        #     key = large_div.find('label', {"class" : 'left'}).text.strip()
-        #     #暂时跳过"基金分级信息"这块
-        #     if key == u"基金分级信息":
-        #         continue
-        #     value = large_div.find('p').text.strip()
-        #     self.raw_info[key] = value
-        #     if key == self.POLICY_KEY:
-        #         self.policy = value
+            if key == FundInfo.TACTICS_KEY:
+                self.tactics = value
+            elif key == FundInfo.LIMITS_KEY:
+                self.limits = value
 
 
 class IndexCompareParser(object):
