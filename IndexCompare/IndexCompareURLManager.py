@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
-class IndexCompareURLManager:
+class IndexCompareURLManager(object):
 
     def __init__(self):
         self.finished_urls = set()
         self.feed_urls = set()
+        self.failed_urls = set()
 
     def add_url(self, url):
         if url not in self.finished_urls and url not in self.feed_urls:
@@ -19,6 +20,9 @@ class IndexCompareURLManager:
         self.feed_urls.discard(url)
         self.finished_urls.add(url)
 
+    def fail_url(self, url):
+        self.failed_urls.add(url)
+
     def is_empyt(self):
         return len(self.feed_urls) == 0
 
@@ -27,3 +31,10 @@ class IndexCompareURLManager:
 
     def pop_url(self):
         return self.feed_urls.pop()
+
+    def output_faileds(self):
+        for url in self.failed_urls:
+            print url
+
+    def transfer_url(self):
+        self.feed_urls = self.feed_urls.union(self.failed_urls)
