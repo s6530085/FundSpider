@@ -12,7 +12,6 @@ class IndexCompareAnalysis(object):
     def __init__(self):
         self.db = sqlite3.connect('test.db')
 
-
     def chooseTargets(self, targets):
         like = u""
         for (index, target) in enumerate(targets):
@@ -33,8 +32,26 @@ class IndexCompareAnalysis(object):
         result = self.db.execute('''
         select * from fundinfo where code == '{}'
         '''.format(code))
+        results = []
         for item in result:
-            print item
+            f = FundInfo()
+            f.parse_sqlresult(item)
+            results.append(f)
+        return results
+
+    #一般从名字,追踪标的,投资范围和策略里搜索
+    def querykeyword(self, keyword):
+        sql = '''
+        select * from fundinfo where ((name like "%{}%" or compare like "%{}%" or track like "%{}%" or limits like "%{}%" or tactics like "%{}%") and size > 5.0)
+        '''.format(keyword, keyword, keyword, keyword, keyword)
+        print sql
+        result = self.db.execute(sql)
+        results = []
+        for item in result:
+            f = FundInfo()
+            f.parse_sqlresult(item)
+            results.append(f)
+        return results
 
     def __del__( self ):
         if self.db != None:
@@ -42,8 +59,12 @@ class IndexCompareAnalysis(object):
 
 
 if __name__ == "__main__":
-    # a = IndexCompareAnalysis()
-    # a.chooseTargets([u"医", u"药"])
-    # a.queryfund(u"001550")
-    t = FundInfo()
-    print t
+    codeSet = set()
+    a = IndexCompareAnalysis()
+    for keyword in (u'医', u'药'):
+        results = a.querykeyword(keyword)
+        print 'total count is ' + str(len(results))
+        for result in results:
+            if result.code not in codeSet:
+                codeSet.add(result.code)
+                print result.code, result.full_name, result.url, result.size

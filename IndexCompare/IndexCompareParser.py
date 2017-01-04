@@ -45,20 +45,30 @@ class FundInfo(object):
     TACTICS_KEY = u'投资策略'
 
     url = u""
+    URL_KEY = u'天天基金介绍页'
 
     #所有资讯都放在里面,键也是直接使用资讯的中文了嘻嘻
     raw_info = dict()
 
-    #由数据构造
-    # def __init__(self, info=()):
-    #     self.code = info[0]
-
     def __str__(self):
-        return u'{} is {}, {} is {}, {} is {}, {} is {}, {} is {}, {} is {}, {} is {}, {} is {}, {} is {}, {} is {}'.format(FundInfo.CODE_KEY, self.code, FundInfo.FULL_NAME_KEY, self.full_name)
+        return u'{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n'.format\
+            (FundInfo.CODE_KEY, self.code, FundInfo.FULL_NAME_KEY, self.full_name, FundInfo.SHORT_NAME_KEY, self.short_name,\
+             FundInfo.SIZE_KEY, self.size, FundInfo.COMPANY_KEY, self.company, FundInfo.MANAGER_KEY, u",".join(self.manager),\
+             FundInfo.COMPARE_TARGET_KEY, self.compare_target, FundInfo.TRACK_TARGET_KEY, self.track_target,\
+             FundInfo.LIMITS_KEY, self.limits, FundInfo.TACTICS_KEY, self.tactics, FundInfo.URL_KEY, self.url)
 
-    def __init__(self):
-        pass
-
+    def parse_sqlresult(self, sqlresult):
+        self.code = sqlresult[0]
+        self.full_name = sqlresult[1]
+        self.short_name = sqlresult[2]
+        self.size = sqlresult[3]
+        self.company = sqlresult[4]
+        self.manager = sqlresult[5].split(u',')
+        self.compare_target = sqlresult[6]
+        self.track_target = sqlresult[7]
+        self.limits = sqlresult[8]
+        self.tactics = sqlresult[9]
+        self.url = sqlresult[10]
 
     def parse_content(self, content=""):
         html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
@@ -126,7 +136,7 @@ class FundInfo(object):
                 self.track_target = value
 
         #然后是几个大的
-        divs = html.xpath(u'//div[@class="boitem w790"]//h4//label[@class="left" and text() != "基金分级信息"]')
+        divs = html.xpath(u'//div[@class="boxitem w790"]//h4//label[@class="left" and text() != "基金分级信息"]')
         ps = html.xpath('//div[@class="boxitem w790"]//p')
         for (index, div) in enumerate(divs):
             key = div.text.strip()
@@ -167,6 +177,17 @@ class IndexCompareParser(object):
         if fund_content is None or fund_url is None:
             return None
 
-        fund_info = FundInfo(fund_content)
+        fund_info = FundInfo()
+        fund_info.parse_content(fund_content)
         fund_info.url = fund_url
         return fund_info
+
+if __name__ == "__main__":
+    s1 = set()
+    s1.add(1)
+    s1.add(2)
+    s2 = set()
+    s2.add(3)
+    s2.add(4)
+    s3 = s1.union(s2)
+    print s3
