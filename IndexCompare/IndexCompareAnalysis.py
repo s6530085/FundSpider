@@ -2,6 +2,7 @@
 __author__ = 'study_sun'
 import sqlite3
 import sys
+import re
 from IndexCompareParser import FundInfo
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -10,42 +11,38 @@ sys.setdefaultencoding('utf-8')
 class IndexCompareAnalysis(object):
 
     def __init__(self):
+        def regexp(expr, item):
+            reg = re.compile(expr)
+            return reg.search(item) is not None
+
         self.db = sqlite3.connect('test.db')
+        self.db.create_function("REGEXP", 2, regexp)
 
-    def chooseTargets(self, targets):
-        like = u""
-        for (index, target) in enumerate(targets):
-            if index < len(targets) - 1:
-                like = like + u"track like '%{}%' or ".format(target)
-            else:
-                like = like + u"track like '%{}%'".format(target)
+    #code和name都是只对相应值进行检索
+    def querycode(self, code):
+        return self.querybycol('code', code)
 
-        result = self.db.execute('''
-        select name, code, url from fundinfo where {};
-        '''.format(like))
+    def queryname(self, name):
+        return self.querybycol('name', name)
 
-        print "符合条件的标的有:"
-        for item in result:
-            print u'{}, 基金代码 {}, 网址 {}'.format(item[0], item[1], item[2])
-
-    def queryfund(self, code):
-        result = self.db.execute('''
-        select * from fundinfo where code == '{}'
-        '''.format(code))
-        results = []
-        for item in result:
-            f = FundInfo()
-            f.parse_sqlresult(item)
-            results.append(f)
-        return results
+    #其他方法懒得扩展了,如果想要检索
+    def querybycol(self, colname, colvalue):
+        sql = '''
+        select * from fundinfo where {} like "%{}%"
+        '''.format(colname, colvalue)
+        return self.query(sql)
 
     #一般从名字,追踪标的,投资范围和策略里搜索
     def querykeyword(self, keyword):
+        #投资策略废话太多,什么都有,搜索其无意义
         sql = '''
-        select * from fundinfo where ((name like "%{}%" or compare like "%{}%" or track like "%{}%" or limits like "%{}%" or tactics like "%{}%") and size > 5.0)
-        '''.format(keyword, keyword, keyword, keyword, keyword)
-        print sql
-        result = self.db.execute(sql)
+        select * from fundinfo where name like "%{}%" or compare like "%{}%" or track like "%{}%" or limits like "%{}%"
+        '''.format(keyword, keyword, keyword, keyword)
+        return self.query(sql)
+
+    #这个是直接写好sql传啦.理论上都是最后调这个的哦
+    def query(self, sql):
+        result = self.db.cursor().execute(sql)
         results = []
         for item in result:
             f = FundInfo()
@@ -57,14 +54,14 @@ class IndexCompareAnalysis(object):
         if self.db != None:
             self.db.close()
 
+def printfunds(funds, simplify=True):
+    print 'funds count is ' + str(len(funds))
+    for fund in funds:
+        if simplify:
+            print fund.code, fund.full_name, fund.url, fund.track_target
+        else:
+            print fund
 
 if __name__ == "__main__":
-    codeSet = set()
     a = IndexCompareAnalysis()
-    for keyword in (u'医', u'药'):
-        results = a.querykeyword(keyword)
-        print 'total count is ' + str(len(results))
-        for result in results:
-            if result.code not in codeSet:
-                codeSet.add(result.code)
-                print result.code, result.full_name, result.url, result.size
+    printfunds(a.querykeyword(u"医|药"))

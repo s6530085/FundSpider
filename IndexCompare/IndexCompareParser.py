@@ -7,70 +7,89 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 
 class FundInfo(object):
+
     #一些我比较感兴趣的资讯参数,默认大写的是类变量,小写的是成员变量
     code = u''
-    CODE_KEY = u'基金代码'
+    CODE_KEY = u'code'
+    CODE_CHINESE_KEY = u'基金代码'
 
-    short_name = u''
-    SHORT_NAME_KEY = u'基金简称'
+    name = u''
+    NAME_KEY = u'name'
+    NAME_CHINESE_KEY = u'基金全称'
 
-    full_name = u''
-    FULL_NAME_KEY = u'基金全称'
+    shortname = u''
+    SHORTNAME_KEY = u'shortname'
+    SHORTNAME_CHINESE_KEY = u'基金简称'
 
     type = u''
-    TYPE_KEY = u'基金类型'
+    TYPE_KEY = u'type'
+    TYPE_CHINESE_KEY = u'基金类型'
 
-    release_time = u''
-    RELEASE_TIME_KEY = u'发行日期'
+    releasetime = u''
+    RELEASETIME_KEY = u'releasetime'
+    RELEASETIME_CHINESE_KEY = u'发行日期'
 
     size = u''
-    SIZE_KEY = u'资产规模'
+    SIZE_KEY = u'size'
+    SIZE_CHINESE_KEY = u'资产规模'
 
     company = u''
-    COMPANY_KEY = u'基金管理人'
+    COMPANY_KEY = u"company"
+    COMPANY_CHINESE_KEY = u'基金管理人'
 
     manager = []
-    MANAGER_KEY = u'基金经理人'
+    MANAGER_KEY = u'manager'
+    MANAGER_CHINESE_KEY = u'基金经理人'
 
-    compare_target = u''
-    COMPARE_TARGET_KEY = u'业绩比较基准'
+    compare = u''
+    COMPARE_KEY = u'compare'
+    COMPARE_CHINESE_KEY = u'业绩比较基准'
 
-    track_target = u''
-    TRACK_TARGET_KEY = u'跟踪标的'
+    track = u''
+    TRACK__KEY = u'track'
+    TRACK_CHINESE_KEY = u'跟踪标的'
 
     limits = u''
-    LIMITS_KEY = u'投资范围'
+    LIMITS_KEY = u'limits'
+    LIMITS_CHINESE_KEY = u'投资范围'
 
     tactics = u''
-    TACTICS_KEY = u'投资策略'
+    TACTICS_KEY = u'tactics'
+    TACTICS_CHINESE_KEY = u'投资策略'
 
     url = u""
-    URL_KEY = u'天天基金介绍页'
+    URL_KEY = u'url'
+    URL_CHINESE_KEY = u'天天基金介绍页'
+
+    #持有比例分机构,个人,内部,我主要关心非个人的持有比例,那么就是机构+内部,而1-非个人自然就是个人了 http://fund.eastmoney.com/f10/cyrjg_000478.html
+
+    #标准差 夏普值和信息值,因为年份可能不同,我尽可能的取最长的 http://fund.eastmoney.com/f10/tsdata_000478.html
 
     #所有资讯都放在里面,键也是直接使用资讯的中文了嘻嘻
     raw_info = dict()
 
     def __str__(self):
         return u'{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n'.format\
-            (FundInfo.CODE_KEY, self.code, FundInfo.FULL_NAME_KEY, self.full_name, FundInfo.SHORT_NAME_KEY, self.short_name,\
+            (FundInfo.CODE_KEY, self.code, FundInfo.NAME_KEY, self.name, FundInfo.SHORTNAME_KEY, self.shortname,\
              FundInfo.SIZE_KEY, self.size, FundInfo.COMPANY_KEY, self.company, FundInfo.MANAGER_KEY, u",".join(self.manager),\
-             FundInfo.COMPARE_TARGET_KEY, self.compare_target, FundInfo.TRACK_TARGET_KEY, self.track_target,\
+             FundInfo.COMPARE_KEY, self.compare, FundInfo.TRACK_KEY, self.track,\
              FundInfo.LIMITS_KEY, self.limits, FundInfo.TACTICS_KEY, self.tactics, FundInfo.URL_KEY, self.url)
 
     def parse_sqlresult(self, sqlresult):
         self.code = sqlresult[0]
-        self.full_name = sqlresult[1]
-        self.short_name = sqlresult[2]
+        self.name = sqlresult[1]
+        self.shortname = sqlresult[2]
         self.size = sqlresult[3]
         self.company = sqlresult[4]
         self.manager = sqlresult[5].split(u',')
-        self.compare_target = sqlresult[6]
-        self.track_target = sqlresult[7]
+        self.compare = sqlresult[6]
+        self.track = sqlresult[7]
         self.limits = sqlresult[8]
         self.tactics = sqlresult[9]
         self.url = sqlresult[10]
 
-    def parse_content(self, content=""):
+    #解析基础数据f10
+    def parse_base(self, content=""):
         html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
         ths = html.xpath('//table//th')
         tds = html.xpath('//table//td')
@@ -104,14 +123,14 @@ class FundInfo(object):
                 value = value[:6]
                 self.code = value
                 self.raw_info[key] = value
-            elif key == FundInfo.SHORT_NAME_KEY:
+            elif key == FundInfo.SHORTNAME_CHINESE_KEY:
                 self.short_name = value
-            elif key == FundInfo.FULL_NAME_KEY:
+            elif key == FundInfo.NAME_CHINESE_KEY:
                 self.full_name = value
             elif key == FundInfo.TYPE_KEY:
                 self.type = value
-            elif key == FundInfo.RELEASE_TIME_KEY:
-                self.release_time = value
+            elif key == FundInfo.RELEASETIME_CHINESE_KEY:
+                self.releasetime = value
             #去掉后面单位和描述只保留数字
             elif key == FundInfo.SIZE_KEY:
                 #某些基金新开或者其他原因没有规模
@@ -120,9 +139,9 @@ class FundInfo(object):
                 self.size = value
                 self.raw_info[key] = value
             #这里是个超链接
-            elif key == FundInfo.COMPANY_KEY:
+            elif key == FundInfo.COMPANY_CHINESE_KEY:
                 self.company = value
-            elif key == FundInfo.MANAGER_KEY:
+            elif key == FundInfo.MANAGER_CHINESE_KEY:
                 value = []
                 #特别处理下基金经理这块,因为可能是多人,其实还可能有重名的情况,不过暂且相信一个基金公司下的基金经理不会重名吧
                 managers = tds[index].xpath('./a')
@@ -130,26 +149,30 @@ class FundInfo(object):
                     value.append(managerName.text.strip())
                 self.raw_info[key] = value
                 self.manager = value
-            elif key == FundInfo.COMPARE_TARGET_KEY:
-                self.compare_target = value
-            elif key == FundInfo.TRACK_TARGET_KEY:
-                self.track_target = value
+            elif key == FundInfo.COMPARE_CHINESE_KEY:
+                self.compare = value
+            elif key == FundInfo.TRACK_CHINESE_KEY:
+                self.track = value
 
         #然后是几个大的
         divs = html.xpath(u'//div[@class="boxitem w790"]//h4//label[@class="left" and text() != "基金分级信息"]')
         ps = html.xpath('//div[@class="boxitem w790"]//p')
         for (index, div) in enumerate(divs):
             key = div.text.strip()
-            #暂时跳过"基金分级信息"这块
-            if key == u"基金分级信息":
-                continue
             value = ps[index].text.strip()
             self.raw_info[key] = value
-            if key == FundInfo.TACTICS_KEY:
+            if key == FundInfo.TACTICS_CHINESE_KEY:
                 self.tactics = value
-            elif key == FundInfo.LIMITS_KEY:
+            elif key == FundInfo.LIMITS_CHINESE_KEY:
                 self.limits = value
 
+    #解析持有人结构,优先选择机构持有比例高的
+    def parse_ratio(self, content):
+        pass
+
+    #解析标准差夏普率等,当然可能是没有的
+    def parse_statistic(self, content):
+        pass
 
 class IndexCompareParser(object):
 
@@ -178,7 +201,7 @@ class IndexCompareParser(object):
             return None
 
         fund_info = FundInfo()
-        fund_info.parse_content(fund_content)
+        fund_info.parse_base(fund_content)
         fund_info.url = fund_url
         return fund_info
 
