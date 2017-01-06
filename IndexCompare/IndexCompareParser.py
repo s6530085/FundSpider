@@ -8,6 +8,7 @@ sys.setdefaultencoding('utf-8')
 
 class FundInfo(object):
 
+    DATABASE_TABLE_NAME = u'fundinfo'
     #一些我比较感兴趣的资讯参数,默认大写的是类变量,小写的是成员变量
     code = u''
     CODE_KEY = u'code'
@@ -62,8 +63,25 @@ class FundInfo(object):
     URL_CHINESE_KEY = u'天天基金介绍页'
 
     #持有比例分机构,个人,内部,我主要关心非个人的持有比例,那么就是机构+内部,而1-非个人自然就是个人了 http://fund.eastmoney.com/f10/cyrjg_000478.html
+    inratio = 0
+    INRATIO_KEY = u'inratio'
+    INRATIO_CHINESE_KEY = u'机构持有比例'
 
     #标准差 夏普值和信息值,因为年份可能不同,我尽可能的取最长的 http://fund.eastmoney.com/f10/tsdata_000478.html
+    std = 0
+    STD_KEY = u'std'
+    STD_CHINESE_KEY = u'标准差'
+
+    sharp = 0
+    SHARP_KEY = u'sharp'
+    SHARP_CHINESE_KEY = u'夏普值'
+
+    info = 0
+
+    #这个是追踪指数的偏差,理论上是越低越好,但其实追根到底我们看的是收益
+    bias = 0
+    BIAS_KEY = u'bias'
+
 
     #所有资讯都放在里面,键也是直接使用资讯的中文了嘻嘻
     raw_info = dict()
@@ -89,7 +107,7 @@ class FundInfo(object):
         self.url = sqlresult[10]
 
     #解析基础数据f10
-    def parse_base(self, content=""):
+    def parse_base(self, content):
         html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
         ths = html.xpath('//table//th')
         tds = html.xpath('//table//td')
@@ -168,11 +186,13 @@ class FundInfo(object):
 
     #解析持有人结构,优先选择机构持有比例高的
     def parse_ratio(self, content):
-        pass
+        html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
+
+
 
     #解析标准差夏普率等,当然可能是没有的
     def parse_statistic(self, content):
-        pass
+        html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
 
 class IndexCompareParser(object):
 
@@ -196,13 +216,12 @@ class IndexCompareParser(object):
         return l
 
     #这里是解析每个基金的详情了,获得的东西很多,反正都在dict里,键可能会逐步增加,根据未来需要分析的东西扩展
-    def parse_fund(self, fund_content, fund_url):
-        if fund_content is None or fund_url is None:
-            return None
-
+    def parse_fund(self, basecontent, ratiocontent, statisticcontent, fundurl):
         fund_info = FundInfo()
-        fund_info.parse_base(fund_content)
-        fund_info.url = fund_url
+        fund_info.parse_base(basecontent)
+        fund_info.parse_ratio(ratiocontent)
+        fund_info.parse_statistic(statisticcontent)
+        fund_info.url = fundurl
         return fund_info
 
 if __name__ == "__main__":

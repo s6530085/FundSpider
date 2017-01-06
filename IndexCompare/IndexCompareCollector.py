@@ -13,7 +13,7 @@ class IndexCompareCollector(object):
         self.db = sqlite3.connect('test.db')
         cursor = self.db.cursor()
         cursor.execute('''
-        create table if not exists fundinfo (
+        create table if not exists {} (
         {} text not null,
         {} text not null,
         {} text not null,
@@ -26,11 +26,11 @@ class IndexCompareCollector(object):
         {} text not null,
         {} text not null
         );
-        '''.format(FundInfo.CODE_KEY, FundInfo.NAME_KEY, FundInfo.SHORTNAME_KEY, FundInfo.SIZE_KEY, FundInfo.COMPANY_KEY,\
+        '''.format(FundInfo.DATABASE_TABLE_NAME, FundInfo.CODE_KEY, FundInfo.NAME_KEY, FundInfo.SHORTNAME_KEY, FundInfo.SIZE_KEY, FundInfo.COMPANY_KEY,\
                    FundInfo.MANAGER_KEY, FundInfo.COMPARE_KEY, FundInfo.TRACK__KEY, FundInfo.LIMITS_KEY, FundInfo.TACTICS_KEY, FundInfo.URL_KEY))
         cursor.execute('''
-        CREATE UNIQUE INDEX if not exists fund_code on fundinfo ({});
-        '''.format(FundInfo.CODE_KEY))
+        CREATE UNIQUE INDEX if not exists fund_code on {} ({});
+        '''.format(FundInfo.DATABASE_TABLE_NAME, FundInfo.CODE_KEY))
 
     def addFund(self, fundInfo):
         #insert or replace 是sqlite特有的,以后如果升级sql需要注意这里

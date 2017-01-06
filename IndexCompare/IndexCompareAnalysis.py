@@ -58,10 +58,10 @@ def printfunds(funds, simplify=True):
     print 'funds count is ' + str(len(funds))
     for fund in funds:
         if simplify:
-            print fund.code, fund.full_name, fund.url, fund.track_target
+            print fund.code, fund.name, fund.url, fund.track
         else:
             print fund
 
 if __name__ == "__main__":
     a = IndexCompareAnalysis()
-    printfunds(a.querykeyword(u"医|药"))
+    printfunds(a.querykeyword(u"医药"))
