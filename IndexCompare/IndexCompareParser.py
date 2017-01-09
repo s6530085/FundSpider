@@ -68,19 +68,26 @@ class FundInfo(object):
     INRATIO_CHINESE_KEY = u'机构持有比例'
 
     #标准差 夏普值和信息值,因为年份可能不同,我尽可能的取最长的 http://fund.eastmoney.com/f10/tsdata_000478.html
+    #反映基金收益率的波动程度。标准差越小，基金的历史阶段收益越稳定。
     std = 0
     STD_KEY = u'std'
     STD_CHINESE_KEY = u'标准差'
 
-    sharp = 0
-    SHARP_KEY = u'sharp'
-    SHARP_CHINESE_KEY = u'夏普值'
+    #反映基金承担单位风险，所能获得的超过无风险收益的超额收益。夏普比率越大，基金的历史阶段绩效表现越佳。
+    sharperatio = 0
+    SHARPERATIO_KEY = u'sharperatio'
+    SHARPERATIO_CHINESE_KEY = u'夏普比率'
 
-    info = 0
+    #表示单位主动风险所带来的超额收益，比率高说明超额收益高。
+    inforatio = 0
+    INFORATIO_KEY = u'inforatio'
+    INFORATIO_CHINESE_KEY = u'信息比率'
 
-    #这个是追踪指数的偏差,理论上是越低越好,但其实追根到底我们看的是收益
+    #这个是指数基金追踪指数的偏差,一般来说，跟踪误差越小，基金经理的管理能力越强,但其实追根到底我们看的是收益
     bias = 0
     BIAS_KEY = u'bias'
+    BIAS_CHINESE_KEY = u'跟踪误差'
+
 
 
     #所有资讯都放在里面,键也是直接使用资讯的中文了嘻嘻
@@ -193,6 +200,29 @@ class FundInfo(object):
     #解析标准差夏普率等,当然可能是没有的
     def parse_statistic(self, content):
         html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
+        nums = html.xpath(u'//td[@class="num"]')
+        if (len(nums) == 9):
+            #只有1,2,3年的数值,而且可能新基金连1年的都没有,需要判断下,以最多年的数据为准
+            stds = nums[0:3]
+            #标准差是个百分数,懒得转了,直接用百分位
+            for stdnum in reversed(stds):
+                if stdnum != '--':
+                    self.std = float(stdnum.split('%')[0])
+                    break
+
+            sharpes = nums[3:6]
+            for sharpenum in reversed(sharpes):
+                if sharpenum != '--':
+                    self.sharperatio = float(sharpenum)
+                    break
+
+            infos = nums[6:9]
+            for infonum in reversed(infos):
+                if infonum != '--':
+                    self.inforatio = float(infonum)
+                    break
+
+
 
 class IndexCompareParser(object):
 
@@ -225,11 +255,5 @@ class IndexCompareParser(object):
         return fund_info
 
 if __name__ == "__main__":
-    s1 = set()
-    s1.add(1)
-    s1.add(2)
-    s2 = set()
-    s2.add(3)
-    s2.add(4)
-    s3 = s1.union(s2)
-    print s3
+    s1 = ["9.82%", "2.3%", "--"]
+    print float(s1[0].split('%')[0])
