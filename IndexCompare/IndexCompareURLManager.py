@@ -46,6 +46,6 @@ class IndexCompareURLManager(object):
     def transfer_url(self):
         self.feed_urls = self.feed_urls.union(self.failed_urls)
 
-
     def __urlsfromcode(self, code):
-        return ["http://fund.eastmoney.com/" + code + '.html', "http://fund.eastmoney.com/f10/jbgk_" + code + '.html', "http://fund.eastmoney.com/f10/cyrjg_" + code + '.html', "http://fund.eastmoney.com/f10/tsdata_" + code + '.html', code]
+        return ["http://fund.eastmoney.com/" + code + '.html', "http://fund.eastmoney.com/f10/jbgk_" + code + '.html',\
+                "http://fund.eastmoney.com/f10/FundArchivesDatas.aspx?type=cyrjg&code=" + code, "http://fund.eastmoney.com/f10/tsdata_" + code + '.html', code]

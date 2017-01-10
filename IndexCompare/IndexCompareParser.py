@@ -88,8 +88,6 @@ class FundInfo(object):
     BIAS_KEY = u'bias'
     BIAS_CHINESE_KEY = u'跟踪误差'
 
-
-
     #所有资讯都放在里面,键也是直接使用资讯的中文了嘻嘻
     raw_info = dict()
 
@@ -191,11 +189,12 @@ class FundInfo(object):
             elif key == FundInfo.LIMITS_CHINESE_KEY:
                 self.limits = value
 
-    #解析持有人结构,优先选择机构持有比例高的
+    #解析持有人结构,优先选择机构持有比例高的,这个似乎在源代码中不能直接获得
     def parse_ratio(self, content):
         html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
-
-
+        tds = html.xpath('//td[class="tor"]')
+        if len(tds) > 2:
+            self.bias = float(tds[0].text.split('%')[0]) + float(tds[2].text.split('%')[0])
 
     #解析标准差夏普率等,当然可能是没有的
     def parse_statistic(self, content):
@@ -206,22 +205,26 @@ class FundInfo(object):
             stds = nums[0:3]
             #标准差是个百分数,懒得转了,直接用百分位
             for stdnum in reversed(stds):
-                if stdnum != '--':
-                    self.std = float(stdnum.split('%')[0])
+                if stdnum.text != '--':
+                    self.std = float(stdnum.text.split('%')[0])
                     break
 
             sharpes = nums[3:6]
             for sharpenum in reversed(sharpes):
-                if sharpenum != '--':
-                    self.sharperatio = float(sharpenum)
+                if sharpenum.text != '--':
+                    self.sharperatio = float(sharpenum.text)
                     break
 
             infos = nums[6:9]
             for infonum in reversed(infos):
-                if infonum != '--':
-                    self.inforatio = float(infonum)
+                if infonum.text != '--':
+                    self.inforatio = float(infonum.text)
                     break
 
+        #只有指数基金才有追踪误差哦
+        trackbias = html.xpath(u'//table[@class="fxtb"]/td')
+        if len(trackbias) == 3:
+            self.bias = float(trackbias[1].text.split('%')[0])
 
 
 class IndexCompareParser(object):

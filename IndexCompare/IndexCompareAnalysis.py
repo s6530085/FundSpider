@@ -25,6 +25,9 @@ class IndexCompareAnalysis(object):
     def queryname(self, name):
         return self.querybycol('name', name)
 
+    def querytrack(self, track):
+        return self.querybycol('track', track)
+
     #其他方法懒得扩展了,如果想要检索
     def querybycol(self, colname, colvalue):
         sql = '''
@@ -64,4 +67,4 @@ def printfunds(funds, simplify=True):
 
 if __name__ == "__main__":
     a = IndexCompareAnalysis()
-    printfunds(a.querykeyword(u"医药"))
+    printfunds(a.querytrack(u"300"))
