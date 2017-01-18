@@ -35,7 +35,10 @@ class IndexCompareURLManager(object):
     FUND_URL_INDEX_BASE = 1
     FUND_URL_INDEX_RATIO = 2
     FUND_URL_INDEX_STATISTIC = 3
-    FUND_URL_INDEX_CODE = 4
+    FUND_URL_INDEX_STOCKS = 4
+    FUND_URL_INDEX_CODE = 5
+
+
     def pop_url(self):
         return self.__urlsfromcode(self.feed_urls.pop())
 
@@ -47,5 +50,9 @@ class IndexCompareURLManager(object):
         self.feed_urls = self.feed_urls.union(self.failed_urls)
 
     def __urlsfromcode(self, code):
-        return ["http://fund.eastmoney.com/" + code + '.html', "http://fund.eastmoney.com/f10/jbgk_" + code + '.html',\
-                "http://fund.eastmoney.com/f10/FundArchivesDatas.aspx?type=cyrjg&code=" + code, "http://fund.eastmoney.com/f10/tsdata_" + code + '.html', code]
+        return ["http://fund.eastmoney.com/" + code + '.html',\
+                "http://fund.eastmoney.com/f10/jbgk_" + code + '.html',\
+                "http://fund.eastmoney.com/f10/FundArchivesDatas.aspx?type=cyrjg&code=" + code,\
+                "http://fund.eastmoney.com/f10/tsdata_" + code + '.html',\
+                "http://fund.eastmoney.com/f10/FundArchivesDatas.aspx?type=jjcc&code=" + code + "&topline=20",\
+                code]

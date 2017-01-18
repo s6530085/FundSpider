@@ -46,15 +46,16 @@ class IndexCompareMain(object):
                     print 'start parse ' + urls[IndexCompareURLManager.FUND_URL_INDEX_MAIN]
                     basecontent = self.html_downloader.download(urls[IndexCompareURLManager.FUND_URL_INDEX_BASE])
                     ratiocontent = self.html_downloader.download(urls[IndexCompareURLManager.FUND_URL_INDEX_RATIO])
-                    statisticcontent = self.html_downloader.download(IndexCompareURLManager.FUND_URL_INDEX_STATISTIC)
+                    statisticcontent = self.html_downloader.download(urls[IndexCompareURLManager.FUND_URL_INDEX_STATISTIC])
+                    stockscontent = self.html_downloader.download(urls[IndexCompareURLManager.FUND_URL_INDEX_STOCKS])
                     #只要有一个失败就都重试哦
                     if basecontent is None or len(basecontent) == 0 or ratiocontent is None or len(ratiocontent) == 0\
-                            or statisticcontent is None or len(statisticcontent) == 0:
+                            or statisticcontent is None or len(statisticcontent) == 0 or stockscontent is None or len(stockscontent) == 0:
                         print 'download fund ' + fundcode + ' failed'
                         self.url_manager.fail_url(fundcode)
                         continue
                     self.url_manager.finish_url(fundcode)
-                    result = self.html_paser.parse_fund(basecontent, ratiocontent, statisticcontent, urls[IndexCompareURLManager.FUND_URL_INDEX_MAIN])
+                    result = self.html_paser.parse_fund(basecontent, ratiocontent, statisticcontent, stockscontent, urls[IndexCompareURLManager.FUND_URL_INDEX_MAIN])
                     self.collector.addFund(result)
                     finished_count[0] += 1
                     print 'finish parse fund ' + fundcode + " " + str(finished_count[0]) + '/' + str(count)

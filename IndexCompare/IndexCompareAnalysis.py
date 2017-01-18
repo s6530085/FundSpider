@@ -67,4 +67,4 @@ def printfunds(funds, simplify=True):
 
 if __name__ == "__main__":
     a = IndexCompareAnalysis()
-    printfunds(a.querytrack(u"300"))
+    printfunds(a.querytrack(u"上证50"))

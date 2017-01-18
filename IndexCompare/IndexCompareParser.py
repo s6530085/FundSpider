@@ -47,7 +47,7 @@ class FundInfo(object):
     COMPARE_CHINESE_KEY = u'业绩比较基准'
 
     track = u''
-    TRACK__KEY = u'track'
+    TRACK_KEY = u'track'
     TRACK_CHINESE_KEY = u'跟踪标的'
 
     limits = u''
@@ -87,6 +87,11 @@ class FundInfo(object):
     bias = 0
     BIAS_KEY = u'bias'
     BIAS_CHINESE_KEY = u'跟踪误差'
+
+    #十大持仓,懒得写也是和经理人一样用逗号分割了,而且如果有半年/年报的话,最多是20大持仓
+    stocks = []
+    STOCKS_KEY = u'stocks'
+    STOCKS_CHINESE_KEY = u'股票投资明细'
 
     #所有资讯都放在里面,键也是直接使用资讯的中文了嘻嘻
     raw_info = dict()
@@ -141,7 +146,7 @@ class FundInfo(object):
                 value = tds[index].text.strip()
             self.raw_info[key] = value
 
-            if key == FundInfo.CODE_KEY:
+            if key == FundInfo.CODE_CHINESE_KEY:
                 #code也分前后端等,懒得管了,就取第一个
                 value = value[:6]
                 self.code = value
@@ -150,12 +155,12 @@ class FundInfo(object):
                 self.short_name = value
             elif key == FundInfo.NAME_CHINESE_KEY:
                 self.full_name = value
-            elif key == FundInfo.TYPE_KEY:
+            elif key == FundInfo.TYPE_CHINESE_KEY:
                 self.type = value
             elif key == FundInfo.RELEASETIME_CHINESE_KEY:
                 self.releasetime = value
             #去掉后面单位和描述只保留数字
-            elif key == FundInfo.SIZE_KEY:
+            elif key == FundInfo.SIZE_CHINESE_KEY:
                 #某些基金新开或者其他原因没有规模
                 if len(value.split(u'亿')) > 0:
                     value = value.split(u'亿')[0]
@@ -191,41 +196,61 @@ class FundInfo(object):
 
     #解析持有人结构,优先选择机构持有比例高的,这个似乎在源代码中不能直接获得
     def parse_ratio(self, content):
+        # content = content.split('"')[1]
         html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
-        tds = html.xpath('//td[class="tor"]')
+        tds = html.xpath('//td[@class="tor"]')
         if len(tds) > 2:
-            self.bias = float(tds[0].text.split('%')[0]) + float(tds[2].text.split('%')[0])
+            #取最新的即可
+            self.inratio = float(tds[0].text.split('%')[0]) + float(tds[2].text.split('%')[0])
 
     #解析标准差夏普率等,当然可能是没有的
     def parse_statistic(self, content):
         html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
-        nums = html.xpath(u'//td[@class="num"]')
-        if (len(nums) == 9):
-            #只有1,2,3年的数值,而且可能新基金连1年的都没有,需要判断下,以最多年的数据为准
-            stds = nums[0:3]
-            #标准差是个百分数,懒得转了,直接用百分位
-            for stdnum in reversed(stds):
-                if stdnum.text != '--':
-                    self.std = float(stdnum.text.split('%')[0])
-                    break
+        nums = html.xpath(u'//table[@class="fxtb"]//td')
+        #有可能只有若干个指标,只能分别判断
+        length = len(nums)
+        if (length > 0 and length % 4 == 0):
+            for i in length/4:
 
-            sharpes = nums[3:6]
-            for sharpenum in reversed(sharpes):
-                if sharpenum.text != '--':
-                    self.sharperatio = float(sharpenum.text)
-                    break
+                #todosm得一个个查,看先有没有标准差
+                #只有1,2,3年的数值,而且可能新基金连1年的都没有,需要判断下,以最多年的数据为准
+                stds = nums[0:3]
+                #标准差是个百分数,懒得转了,直接用百分位
+                for stdnum in reversed(stds):
+                    if stdnum.text != '--':
+                        self.std = float(stdnum.text.split('%')[0])
+                        break
 
-            infos = nums[6:9]
-            for infonum in reversed(infos):
-                if infonum.text != '--':
-                    self.inforatio = float(infonum.text)
-                    break
+                sharpes = nums[3:6]
+                for sharpenum in reversed(sharpes):
+                    if sharpenum.text != '--':
+                        self.sharperatio = float(sharpenum.text)
+                        break
+
+                infos = nums[6:9]
+                for infonum in reversed(infos):
+                    if infonum.text != '--':
+                        self.inforatio = float(infonum.text)
+                        break
 
         #只有指数基金才有追踪误差哦
         trackbias = html.xpath(u'//table[@class="fxtb"]/td')
         if len(trackbias) == 3:
             self.bias = float(trackbias[1].text.split('%')[0])
 
+    def parse_stocks(self, content):
+        html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
+        tds = html.xpath('//div[@class="w782 comm tzxq"]//td/a')
+        #稍微有点繁琐,一个持仓有6个这种结构的a标签,第一个是编号,第二个是名字,后四无关紧要
+        length = len(tds)
+        if length > 0 and length%6 == 0:
+            for i in length/6:
+                stocktds = tds[i*6:(i+1)*6]
+                c = stocktds[0].text
+                n = stocktds[1].text
+                #把编号和名字都输进去,到时候可以双重搜索
+                self.stocks.append(c)
+                self.stocks.append(n)
 
 class IndexCompareParser(object):
 
@@ -249,11 +274,12 @@ class IndexCompareParser(object):
         return l
 
     #这里是解析每个基金的详情了,获得的东西很多,反正都在dict里,键可能会逐步增加,根据未来需要分析的东西扩展
-    def parse_fund(self, basecontent, ratiocontent, statisticcontent, fundurl):
+    def parse_fund(self, basecontent, ratiocontent, statisticcontent, stockcontent, fundurl):
         fund_info = FundInfo()
         fund_info.parse_base(basecontent)
         fund_info.parse_ratio(ratiocontent)
         fund_info.parse_statistic(statisticcontent)
+        fund_info.parse_stocks(stockcontent)
         fund_info.url = fundurl
         return fund_info
 
