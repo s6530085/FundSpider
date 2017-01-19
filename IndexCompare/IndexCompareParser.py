@@ -104,6 +104,9 @@ class FundInfo(object):
              FundInfo.COMPARE_KEY, self.compare, FundInfo.TRACK_KEY, self.track,\
              FundInfo.LIMITS_KEY, self.limits, FundInfo.TACTICS_KEY, self.tactics, FundInfo.URL_KEY, self.url)
 
+    def short_desc(self):
+        return u'{}: {} {}: {}'.for
+
     def parse_sqlresult(self, sqlresult):
         self.code = sqlresult[0]
         self.name = sqlresult[1]
