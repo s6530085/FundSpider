@@ -88,3 +88,6 @@ ENV/
 # Rope project settings
 .ropeproject
 test.db
+.idea/FundSpider.iml
+.idea/misc.xml
+.idea/workspace.xml
