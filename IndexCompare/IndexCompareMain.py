@@ -26,12 +26,12 @@ class IndexCompareMain(object):
         count = 0
         finished_count = [0]
 
-        # for fund_info in funds_info:
-        #     (code, name) = fund_info
-        #     #其实name根本没用到
-        #     self.url_manager.add_url(code)
-        #     count += 1
-        self.url_manager.add_url("001317")
+        for fund_info in funds_info:
+            (code, name) = fund_info
+            #其实name根本没用到
+            self.url_manager.add_url(code)
+            count += 1
+        # self.url_manager.add_url("001317")
         print '共需爬取基金详情 ' + str(count) + " 个"
 
         def inner_craw(isretry=False):

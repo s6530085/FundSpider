@@ -30,7 +30,7 @@ class FundInfo(object):
     RELEASETIME_KEY = u'releasetime'
     RELEASETIME_CHINESE_KEY = u'发行日期'
 
-    size = u''
+    size = 0
     SIZE_KEY = u'size'
     SIZE_CHINESE_KEY = u'资产规模'
 
@@ -54,6 +54,7 @@ class FundInfo(object):
     LIMITS_KEY = u'limits'
     LIMITS_CHINESE_KEY = u'投资范围'
 
+    #不在数据库里保存投资策略了,废话太多反而搜不出有用的东西,而且数据库会极度庞大
     tactics = u''
     TACTICS_KEY = u'tactics'
     TACTICS_CHINESE_KEY = u'投资策略'
@@ -107,14 +108,20 @@ class FundInfo(object):
         self.code = sqlresult[0]
         self.name = sqlresult[1]
         self.shortname = sqlresult[2]
+        #不知道这个类型是否是数字的,待验证
         self.size = sqlresult[3]
         self.company = sqlresult[4]
         self.manager = sqlresult[5].split(u',')
         self.compare = sqlresult[6]
         self.track = sqlresult[7]
         self.limits = sqlresult[8]
-        self.tactics = sqlresult[9]
-        self.url = sqlresult[10]
+        self.url = sqlresult[9]
+        self.inratio = sqlresult[10]
+        self.std = sqlresult[11]
+        self.sharperatio = sqlresult[12]
+        self.inforatio = sqlresult[13]
+        self.bias = sqlresult[14]
+        self.stocks = sqlresult[15].split(u',')
 
     #解析基础数据f10
     def parse_base(self, content):
@@ -152,9 +159,9 @@ class FundInfo(object):
                 self.code = value
                 self.raw_info[key] = value
             elif key == FundInfo.SHORTNAME_CHINESE_KEY:
-                self.short_name = value
+                self.shortname = value
             elif key == FundInfo.NAME_CHINESE_KEY:
-                self.full_name = value
+                self.name = value
             elif key == FundInfo.TYPE_CHINESE_KEY:
                 self.type = value
             elif key == FundInfo.RELEASETIME_CHINESE_KEY:
@@ -164,8 +171,8 @@ class FundInfo(object):
                 #某些基金新开或者其他原因没有规模
                 if len(value.split(u'亿')) > 0:
                     value = value.split(u'亿')[0]
-                self.size = value
-                self.raw_info[key] = value
+                self.size = float(value)
+                self.raw_info[key] = float(value)
             #这里是个超链接
             elif key == FundInfo.COMPANY_CHINESE_KEY:
                 self.company = value
@@ -200,38 +207,43 @@ class FundInfo(object):
         html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
         tds = html.xpath('//td[@class="tor"]')
         if len(tds) > 2:
-            #取最新的即可
-            self.inratio = float(tds[0].text.split('%')[0]) + float(tds[2].text.split('%')[0])
+            #取最新的即可,不过可能是---哦
+            insito = tds[0].text
+            if insito != '---':
+                self.inratio += float(insito.split("%")[0])
+            innerto = tds[2].text
+            if innerto != '---':
+                self.inratio += float(innerto.split("%")[0])
+            # self.inratio = float(.split('%')[0]) + float(tds[2].text.split('%')[0])
 
     #解析标准差夏普率等,当然可能是没有的
     def parse_statistic(self, content):
         html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
         nums = html.xpath(u'//table[@class="fxtb"]//td')
-        #有可能只有若干个指标,只能分别判断
         length = len(nums)
         if (length > 0 and length % 4 == 0):
-            for i in length/4:
-
-                #todosm得一个个查,看先有没有标准差
-                #只有1,2,3年的数值,而且可能新基金连1年的都没有,需要判断下,以最多年的数据为准
-                stds = nums[0:3]
-                #标准差是个百分数,懒得转了,直接用百分位
-                for stdnum in reversed(stds):
-                    if stdnum.text != '--':
-                        self.std = float(stdnum.text.split('%')[0])
-                        break
-
-                sharpes = nums[3:6]
-                for sharpenum in reversed(sharpes):
-                    if sharpenum.text != '--':
-                        self.sharperatio = float(sharpenum.text)
-                        break
-
-                infos = nums[6:9]
-                for infonum in reversed(infos):
-                    if infonum.text != '--':
-                        self.inforatio = float(infonum.text)
-                        break
+            for i in range(0, length/4):
+                tds = nums[i*4:(i+1)*4]
+                #有可能只有若干个指标,只能分别判断
+                if tds[0].text == FundInfo.STD_CHINESE_KEY:
+                    stds = reversed(tds[1:4])
+                    for stdnum in stds:
+                        #只有1,2,3年的数值,而且可能新基金连1年的都没有,需要判断下,以最多年的数据为准,下同
+                        if stdnum.text != '--':
+                            self.std = float(stdnum.text.split('%')[0])
+                            break
+                elif tds[0].text == FundInfo.SHARPERATIO_CHINESE_KEY:
+                    sharpes = reversed(tds[1:4])
+                    for sharpenum in sharpes:
+                        if sharpenum.text != '--':
+                            self.sharperatio = float(sharpenum.text)
+                            break
+                elif tds[0].text == FundInfo.INFORATIO_CHINESE_KEY:
+                    infos = reversed(tds[1:4])
+                    for infonum in infos:
+                        if infonum.text != '--':
+                            self.inforatio = float(infonum.text)
+                            break
 
         #只有指数基金才有追踪误差哦
         trackbias = html.xpath(u'//table[@class="fxtb"]/td')
@@ -240,17 +252,14 @@ class FundInfo(object):
 
     def parse_stocks(self, content):
         html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
-        tds = html.xpath('//div[@class="w782 comm tzxq"]//td/a')
-        #稍微有点繁琐,一个持仓有6个这种结构的a标签,第一个是编号,第二个是名字,后四无关紧要
-        length = len(tds)
-        if length > 0 and length%6 == 0:
-            for i in length/6:
-                stocktds = tds[i*6:(i+1)*6]
-                c = stocktds[0].text
-                n = stocktds[1].text
-                #把编号和名字都输进去,到时候可以双重搜索
-                self.stocks.append(c)
-                self.stocks.append(n)
+        #只记录最新的一次持仓即可,老持仓暂时对我没有参考意义
+        tbs = html.xpath('//table[@class="w782 comm tzxq"]')
+        if len(tbs) > 0:
+            #懒得记录编号了,直接用名字
+            stocktds = tbs[0].xpath('.//td[@class="tol"]/a')
+            for stocked in stocktds:
+                self.stocks.append(stocked.text)
+
 
 class IndexCompareParser(object):
 
@@ -284,5 +293,4 @@ class IndexCompareParser(object):
         return fund_info
 
 if __name__ == "__main__":
-    s1 = ["9.82%", "2.3%", "--"]
-    print float(s1[0].split('%')[0])
+    print float('87%')

@@ -19,20 +19,22 @@ class IndexCompareAnalysis(object):
         self.db.create_function("REGEXP", 2, regexp)
 
     #code和name都是只对相应值进行检索
-    def querycode(self, code):
-        return self.querybycol('code', code)
+    def querycode(self, code, order='', isasc=True):
+        return self.querybycol('code', code, order, isasc)
 
-    def queryname(self, name):
-        return self.querybycol('name', name)
+    def queryname(self, name, order='', isasc=True):
+        return self.querybycol('name', name, order, isasc)
 
-    def querytrack(self, track):
-        return self.querybycol('track', track)
+    def querytrack(self, track, order='', isasc=True):
+        return self.querybycol('track', track, order, isasc)
 
     #其他方法懒得扩展了,如果想要检索
-    def querybycol(self, colname, colvalue):
+    def querybycol(self, colname, colvalue, order='', isasc=True):
         sql = '''
         select * from fundinfo where {} like "%{}%"
         '''.format(colname, colvalue)
+        if len(order) > 0 :
+            sql += ' order by {} {}'.format(order,  'asc' if isasc else 'desc')
         return self.query(sql)
 
     #一般从名字,追踪标的,投资范围和策略里搜索
@@ -67,4 +69,4 @@ def printfunds(funds, simplify=True):
 
 if __name__ == "__main__":
     a = IndexCompareAnalysis()
-    printfunds(a.querytrack(u"上证50"))
+    printfunds(a.queryname(u"黄金", 'size', False))

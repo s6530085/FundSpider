@@ -44,7 +44,7 @@ class IndexCompareURLManager(object):
 
     def output_faileds(self):
         for url in self.failed_urls:
-            print url
+            print "http://fund.eastmoney.com/" + url + '.html'
 
     def transfer_url(self):
         self.feed_urls = self.feed_urls.union(self.failed_urls)
