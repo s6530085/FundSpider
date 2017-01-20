@@ -12,7 +12,7 @@ class IndexCompareCollector(object):
     def __init__(self):
         self.db = sqlite3.connect('test.db')
         cursor = self.db.cursor()
-        #数据库逐步扩展中 0.代码 1.全称 2.简称 3.规模 4.基金公司 5.经理 6.比较基准 7.追踪标的 8.范围 9.网页 10.机构持有比例 11.标准差 12.夏普比率 13.信息比例 14.跟踪误差 15.持仓
+        #数据库逐步扩展中 0.代码 1.全称 2.简称 3.规模 4.基金公司 5.经理 6.比较基准 7.追踪标的 8.范围 9.网页 10.机构持有比例 11.标准差 12.夏普比率 13.信息比例 14.跟踪误差 15.持仓 16.年化收益 17.收益排行
         cursor.execute('''
         create table if not exists {} (
         {} text not null,
@@ -30,7 +30,9 @@ class IndexCompareCollector(object):
         {} numberic not null,
         {} numberic not null,
         {} numberic not null,
-        {} text not null
+        {} text not null,
+        {} numberic not null,
+        {} numberic not null
         );
         '''.format(FundInfo.DATABASE_TABLE_NAME,\
                    FundInfo.CODE_KEY,\
@@ -48,14 +50,16 @@ class IndexCompareCollector(object):
                    FundInfo.SHARPERATIO_KEY,\
                    FundInfo.INFORATIO_KEY,\
                    FundInfo.BIAS_KEY,\
-                   FundInfo.STOCKS_KEY))
+                   FundInfo.STOCKS_KEY,\
+                   FundInfo.ANNUALYIELD_KEY,\
+                   FundInfo.ANNUALRANK_KEY))
         cursor.execute('''
         CREATE UNIQUE INDEX if not exists fund_code on {} ({});
         '''.format(FundInfo.DATABASE_TABLE_NAME, FundInfo.CODE_KEY))
 
     def addFund(self, fundInfo):
         #insert or replace 是sqlite特有的,以后如果升级sql需要注意这里
-        sql = "insert or replace into fundinfo ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}) "\
+        sql = "insert or replace into fundinfo ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}) "\
         .format(FundInfo.CODE_KEY,\
                 FundInfo.NAME_KEY,\
                 FundInfo.SHORTNAME_KEY,\
@@ -71,9 +75,11 @@ class IndexCompareCollector(object):
                 FundInfo.SHARPERATIO_KEY,\
                 FundInfo.INFORATIO_KEY,\
                 FundInfo.BIAS_KEY,\
-                FundInfo.STOCKS_KEY)
-        sql += "values ('''{0}''', '''{1}''', '''{2}''', {3}, '''{4}''', '''{5}''', '''{6}''', '''{7}''', '''{8}''', '''{9}''', {10}, {11}, {12}, {13}, {14}, '''{15}''');"\
-        .format(fundInfo.code, fundInfo.name, fundInfo.shortname, fundInfo.size, fundInfo.company, u','.join(fundInfo.manager), fundInfo.compare, fundInfo.track, fundInfo.limits, fundInfo.url, fundInfo.inratio, fundInfo.std, fundInfo.sharperatio, fundInfo.inforatio, fundInfo.bias, u",".join(fundInfo.stocks))
+                FundInfo.STOCKS_KEY,\
+                FundInfo.ANNUALYIELD_KEY,\
+                FundInfo.ANNUALRANK_KEY)
+        sql += "values ('''{0}''', '''{1}''', '''{2}''', {3}, '''{4}''', '''{5}''', '''{6}''', '''{7}''', '''{8}''', '''{9}''', {10}, {11}, {12}, {13}, {14}, '''{15}''', {16}, {17});"\
+        .format(fundInfo.code, fundInfo.name, fundInfo.shortname, fundInfo.size, fundInfo.company, u','.join(fundInfo.manager), fundInfo.compare, fundInfo.track, fundInfo.limits, fundInfo.url, fundInfo.inratio, fundInfo.std, fundInfo.sharperatio, fundInfo.inforatio, fundInfo.bias, u",".join(fundInfo.stocks), fundInfo.annualyield, fundInfo.annualrank)
         self.db.cursor().execute(sql)
         self.db.commit()
 

@@ -55,6 +55,15 @@ class IndexCompareAnalysis(object):
             results.append(f)
         return results
 
+    def test(self):
+        result = self.db.cursor().execute('select * from fundinfo')
+        results = []
+        for item in result:
+            f = FundInfo()
+            f.parse_sqlresult(item)
+            results.append(f)
+        return results
+
     def __del__( self ):
         if self.db != None:
             self.db.close()
@@ -69,4 +78,4 @@ def printfunds(funds, simplify=True):
 
 if __name__ == "__main__":
     a = IndexCompareAnalysis()
-    printfunds(a.queryname(u"黄金", 'size', False))
+    printfunds(a.test())

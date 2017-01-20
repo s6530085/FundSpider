@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+from enum import Enum, unique
+
+@unique
+class FundURLIndex(Enum):
+    MAIN = 0 #主页
+    BASE = 1 #基础信息
+    RATIO = 2 #持有人比例
+    STATISTIC = 3 #特色统计如标准差
+    STOCKS = 4 #持仓
+    ANNUAL = 5 #年度收益
+    CODE = 6 #编号
 
 class IndexCompareURLManager(object):
     #管理的其实不是真实url,而是code加上相关url
@@ -30,15 +41,6 @@ class IndexCompareURLManager(object):
     def is_overflow(self):
         return False #len(self.finished_urls) >= 2
 
-    #吐出来的是若干页面,先用list表示,第一是基础页面,第二是f10,第三是持有者结构,第四是标准差
-    FUND_URL_INDEX_MAIN = 0
-    FUND_URL_INDEX_BASE = 1
-    FUND_URL_INDEX_RATIO = 2
-    FUND_URL_INDEX_STATISTIC = 3
-    FUND_URL_INDEX_STOCKS = 4
-    FUND_URL_INDEX_CODE = 5
-
-
     def pop_url(self):
         return self.__urlsfromcode(self.feed_urls.pop())
 
@@ -55,4 +57,5 @@ class IndexCompareURLManager(object):
                 "http://fund.eastmoney.com/f10/FundArchivesDatas.aspx?type=cyrjg&code=" + code,\
                 "http://fund.eastmoney.com/f10/tsdata_" + code + '.html',\
                 "http://fund.eastmoney.com/f10/FundArchivesDatas.aspx?type=jjcc&code=" + code + "&topline=20",\
+                "http://fund.eastmoney.com/f10/FundArchivesDatas.aspx?type=yearzf&code=" + code,\
                 code]

@@ -3,6 +3,7 @@ from IndexCompareURLManager import *
 from IndexCompareDownloader import *
 from IndexCompareParser import *
 from IndexCompareCollector import *
+from IndexCompareURLManager import FundURLIndex
 
 class IndexCompareMain(object):
 
@@ -40,22 +41,24 @@ class IndexCompareMain(object):
 
             while (not self.url_manager.is_empyt() and not self.url_manager.is_overflow()):
                 urls = self.url_manager.pop_url()
-                fundcode = urls[IndexCompareURLManager.FUND_URL_INDEX_CODE]
+                fundcode = urls[FundURLIndex.CODE.value]
                 try:
                     #简化一下问题,只有所有相关页面都下载完毕才算ok
-                    print 'start parse ' + urls[IndexCompareURLManager.FUND_URL_INDEX_MAIN]
-                    basecontent = self.html_downloader.download(urls[IndexCompareURLManager.FUND_URL_INDEX_BASE])
-                    ratiocontent = self.html_downloader.download(urls[IndexCompareURLManager.FUND_URL_INDEX_RATIO])
-                    statisticcontent = self.html_downloader.download(urls[IndexCompareURLManager.FUND_URL_INDEX_STATISTIC])
-                    stockscontent = self.html_downloader.download(urls[IndexCompareURLManager.FUND_URL_INDEX_STOCKS])
-                    #只要有一个失败就都重试哦
+                    print 'start parse ' + urls[FundURLIndex.MAIN.value]
+                    basecontent = self.html_downloader.download(urls[FundURLIndex.BASE.value])
+                    ratiocontent = self.html_downloader.download(urls[FundURLIndex.RATIO.value])
+                    statisticcontent = self.html_downloader.download(urls[FundURLIndex.STATISTIC.value])
+                    stockscontent = self.html_downloader.download(urls[FundURLIndex.STOCKS.value])
+                    annualcontent = self.html_downloader.download(urls[FundURLIndex.ANNUAL.value])
+                    #只要有一个失败就都重试哦,其实也有个别网页是真的不存在,但懒得管了
                     if basecontent is None or len(basecontent) == 0 or ratiocontent is None or len(ratiocontent) == 0\
-                            or statisticcontent is None or len(statisticcontent) == 0 or stockscontent is None or len(stockscontent) == 0:
+                            or statisticcontent is None or len(statisticcontent) == 0 or stockscontent is None or len(stockscontent) == 0 \
+                            or annualcontent is None or len(annualcontent) == 0:
                         print 'download fund ' + fundcode + ' failed'
                         self.url_manager.fail_url(fundcode)
                         continue
                     self.url_manager.finish_url(fundcode)
-                    result = self.html_paser.parse_fund(basecontent, ratiocontent, statisticcontent, stockscontent, urls[IndexCompareURLManager.FUND_URL_INDEX_MAIN])
+                    result = self.html_paser.parse_fund(basecontent, ratiocontent, statisticcontent, stockscontent, annualcontent, urls[FundURLIndex.MAIN.value])
                     self.collector.addFund(result)
                     finished_count[0] += 1
                     print 'finish parse fund ' + fundcode + " " + str(finished_count[0]) + '/' + str(count)

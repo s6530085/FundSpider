@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 from lxml import etree
+from SpiderBase.SBConvenient import safetofloat
 import sys
 
 reload(sys)
@@ -70,22 +71,22 @@ class FundInfo(object):
 
     #标准差 夏普值和信息值,因为年份可能不同,我尽可能的取最长的 http://fund.eastmoney.com/f10/tsdata_000478.html
     #反映基金收益率的波动程度。标准差越小，基金的历史阶段收益越稳定。
-    std = 0
+    std = 0.0
     STD_KEY = u'std'
     STD_CHINESE_KEY = u'标准差'
 
     #反映基金承担单位风险，所能获得的超过无风险收益的超额收益。夏普比率越大，基金的历史阶段绩效表现越佳。
-    sharperatio = 0
+    sharperatio = 0.0
     SHARPERATIO_KEY = u'sharperatio'
     SHARPERATIO_CHINESE_KEY = u'夏普比率'
 
     #表示单位主动风险所带来的超额收益，比率高说明超额收益高。
-    inforatio = 0
+    inforatio = 0.0
     INFORATIO_KEY = u'inforatio'
     INFORATIO_CHINESE_KEY = u'信息比率'
 
     #这个是指数基金追踪指数的偏差,一般来说，跟踪误差越小，基金经理的管理能力越强,但其实追根到底我们看的是收益
-    bias = 0
+    bias = 0.0
     BIAS_KEY = u'bias'
     BIAS_CHINESE_KEY = u'跟踪误差'
 
@@ -94,18 +95,36 @@ class FundInfo(object):
     STOCKS_KEY = u'stocks'
     STOCKS_CHINESE_KEY = u'股票投资明细'
 
+    #年度收益率,太细的没必要看,直接转化为年化收益
+    annualyield = -1.0 #这里用0也不一定妥当,因为可能会有负的收益,那么0反而是不亏的,所以就设置为一个负值,因为是年化,所以不可能低于-1
+    ANNUALYIELD_KEY = u'annualyield'
+    ANNUALYIELD_CHINESE_KEY = u'年度涨幅'
+
+    #年度收益的同列排行,原始数据是 99|200, 2|201, 最后以算术平均值,按理说同类中越小越好,可能会有更好的统计方式,但我还没想到
+    annualrank = 1.0 #为什么默认值为1呢,因为这个数值是越小越好,结果默认就是0的话,在排序时就可能搞的没数据的反而排最前面了
+    ANNUALRANK_KEY = u'annualrank'
+    ANNUALRANK_CHINESE_KEY = u'同类排名'
+
     #所有资讯都放在里面,键也是直接使用资讯的中文了嘻嘻
     raw_info = dict()
 
     def __str__(self):
+        return self.full_desc()
+
+    #简单的就只打印编号,简称和url
+    def short_desc(self):
+        return u'{}: {} {}: {} {}: {} '.format(FundInfo.CODE_CHINESE_KEY, self.code, FundInfo.NAME_CHINESE_KEY, FundInfo.name, FundInfo.URL_CHINESE_KEY, FundInfo.url)
+
+    def middle_desc(self):
+        return ''
+
+    #全称吗自然全打印咯
+    def full_desc(self):
         return u'{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n'.format\
             (FundInfo.CODE_KEY, self.code, FundInfo.NAME_KEY, self.name, FundInfo.SHORTNAME_KEY, self.shortname,\
              FundInfo.SIZE_KEY, self.size, FundInfo.COMPANY_KEY, self.company, FundInfo.MANAGER_KEY, u",".join(self.manager),\
              FundInfo.COMPARE_KEY, self.compare, FundInfo.TRACK_KEY, self.track,\
              FundInfo.LIMITS_KEY, self.limits, FundInfo.TACTICS_KEY, self.tactics, FundInfo.URL_KEY, self.url)
-
-    def short_desc(self):
-        return u'{}: {} {}: {}'.for
 
     def parse_sqlresult(self, sqlresult):
         self.code = sqlresult[0]
@@ -125,6 +144,8 @@ class FundInfo(object):
         self.inforatio = sqlresult[13]
         self.bias = sqlresult[14]
         self.stocks = sqlresult[15].split(u',')
+        self.annualyield = sqlresult[16]
+        self.annualrank = sqlresult[17]
 
     #解析基础数据f10
     def parse_base(self, content):
@@ -174,8 +195,8 @@ class FundInfo(object):
                 #某些基金新开或者其他原因没有规模
                 if len(value.split(u'亿')) > 0:
                     value = value.split(u'亿')[0]
-                self.size = float(value)
-                self.raw_info[key] = float(value)
+                self.size = safetofloat(value)
+                self.raw_info[key] = safetofloat(value)
             #这里是个超链接
             elif key == FundInfo.COMPANY_CHINESE_KEY:
                 self.company = value
@@ -213,11 +234,11 @@ class FundInfo(object):
             #取最新的即可,不过可能是---哦
             insito = tds[0].text
             if insito != '---':
-                self.inratio += float(insito.split("%")[0])
+                self.inratio += safetofloat(insito.split("%")[0])
             innerto = tds[2].text
             if innerto != '---':
-                self.inratio += float(innerto.split("%")[0])
-            # self.inratio = float(.split('%')[0]) + float(tds[2].text.split('%')[0])
+                self.inratio += safetofloat(innerto.split("%")[0])
+            # self.inratio = safetofloat(.split('%')[0]) + safetofloat(tds[2].text.split('%')[0])
 
     #解析标准差夏普率等,当然可能是没有的
     def parse_statistic(self, content):
@@ -233,25 +254,25 @@ class FundInfo(object):
                     for stdnum in stds:
                         #只有1,2,3年的数值,而且可能新基金连1年的都没有,需要判断下,以最多年的数据为准,下同
                         if stdnum.text != '--':
-                            self.std = float(stdnum.text.split('%')[0])
+                            self.std = safetofloat(stdnum.text.split('%')[0])
                             break
                 elif tds[0].text == FundInfo.SHARPERATIO_CHINESE_KEY:
                     sharpes = reversed(tds[1:4])
                     for sharpenum in sharpes:
                         if sharpenum.text != '--':
-                            self.sharperatio = float(sharpenum.text)
+                            self.sharperatio = safetofloat(sharpenum.text)
                             break
                 elif tds[0].text == FundInfo.INFORATIO_CHINESE_KEY:
                     infos = reversed(tds[1:4])
                     for infonum in infos:
                         if infonum.text != '--':
-                            self.inforatio = float(infonum.text)
+                            self.inforatio = safetofloat(infonum.text)
                             break
 
         #只有指数基金才有追踪误差哦
         trackbias = html.xpath(u'//table[@class="fxtb"]/td')
         if len(trackbias) == 3:
-            self.bias = float(trackbias[1].text.split('%')[0])
+            self.bias = safetofloat(trackbias[1].text.split('%')[0])
 
     def parse_stocks(self, content):
         html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
@@ -262,6 +283,39 @@ class FundInfo(object):
             stocktds = tbs[0].xpath('.//td[@class="tol"]/a')
             for stocked in stocktds:
                 self.stocks.append(stocked.text)
+
+    def parse_annual(self, content):
+        #需要小心的是,收益算年化,排名则是算术平均值,以及没有数值不能简单地以0替代,否则会有偏差
+        #目前只能获得最多八年的记录
+        html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
+        trs = html.xpath('//table/tbody/tr')
+        #第一个是收益,第四个是排名
+        if len(trs)==5:
+            yieldtds = trs[0].xpath('./td')
+            #第一个是标题
+            yieldvalue = 1.0
+            yieldpow = 0.0
+            #其实反了,不过就数学上没差别
+            for yearyield in yieldtds[1:]:
+                y = yearyield.text
+                if y != '---':
+                    yieldvalue *= (1 + safetofloat(y.split('%')[0])/100)
+                    yieldpow += 1
+            #如果一个都没有就别算了
+            if yieldpow != 0.0:
+                self.annualyield = yieldvalue ** (1.0/yieldpow) - 1
+
+            ranktds = trs[3].xpath('./td')
+            rankcount = 0
+            rankvalue = 0.0
+            for ranktd in ranktds[1:]:
+                r = ''.join(ranktd.itertext()).strip()
+                if r != '---':
+                    rankvalue += safetofloat(r.split('|')[0]) / safetofloat(r.split('|')[1])
+                    rankcount += 1
+            if rankcount > 0:
+                self.annualrank = rankvalue / rankcount
+
 
 
 class IndexCompareParser(object):
@@ -286,14 +340,15 @@ class IndexCompareParser(object):
         return l
 
     #这里是解析每个基金的详情了,获得的东西很多,反正都在dict里,键可能会逐步增加,根据未来需要分析的东西扩展
-    def parse_fund(self, basecontent, ratiocontent, statisticcontent, stockcontent, fundurl):
+    def parse_fund(self, basecontent, ratiocontent, statisticcontent, stockcontent, annualcontent, fundurl):
         fund_info = FundInfo()
         fund_info.parse_base(basecontent)
         fund_info.parse_ratio(ratiocontent)
         fund_info.parse_statistic(statisticcontent)
         fund_info.parse_stocks(stockcontent)
+        fund_info.parse_annual(annualcontent)
         fund_info.url = fundurl
         return fund_info
 
 if __name__ == "__main__":
-    print float('87%')
+    print ','.join([1,2,3,4,5])
