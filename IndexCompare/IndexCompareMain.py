@@ -32,7 +32,7 @@ class IndexCompareMain(object):
             #其实name根本没用到
             self.url_manager.add_url(code)
             count += 1
-        # self.url_manager.add_url("001317")
+        # self.url_manager.add_url("000743")
         print '共需爬取基金详情 ' + str(count) + " 个"
 
         def inner_craw(isretry=False):

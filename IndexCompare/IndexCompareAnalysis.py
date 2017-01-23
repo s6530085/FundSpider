@@ -16,6 +16,7 @@ class IndexCompareAnalysis(object):
             return reg.search(item) is not None
 
         self.db = sqlite3.connect('test.db')
+        #关于正则函数是看这里的 http://stackoverflow.com/questions/5365451/problem-with-regexp-python-and-sqlite
         self.db.create_function("REGEXP", 2, regexp)
 
     #code和name都是只对相应值进行检索
