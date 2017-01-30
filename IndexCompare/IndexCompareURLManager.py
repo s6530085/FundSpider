@@ -39,7 +39,7 @@ class IndexCompareURLManager(object):
         return len(self.feed_urls) == 0
 
     def is_overflow(self):
-        return False #len(self.finished_urls) >= 2
+        return False#len(self.finished_urls) >= 100
 
     def pop_url(self):
         return self.__urlsfromcode(self.feed_urls.pop())

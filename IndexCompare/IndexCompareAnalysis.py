@@ -15,7 +15,7 @@ class IndexCompareAnalysis(object):
             reg = re.compile(expr)
             return reg.search(item) is not None
 
-        self.db = sqlite3.connect('test.db')
+        self.db = sqlite3.connect('Fund.db')
         #关于正则函数是看这里的 http://stackoverflow.com/questions/5365451/problem-with-regexp-python-and-sqlite
         self.db.create_function("REGEXP", 2, regexp)
 
@@ -56,14 +56,22 @@ class IndexCompareAnalysis(object):
             results.append(f)
         return results
 
-    def test(self):
-        result = self.db.cursor().execute('select * from fundinfo')
+    def rawquery(self, sql):
+        return self.db.cursor().execute(sql)
+
+    #这个以stocks里最多出现的基金为准
+    def querystocks(self, stocks,cap=10):
+        all = self.db.cursor().execute('select * from fundinfo')
         results = []
-        for item in result:
+        for item in all:
             f = FundInfo()
             f.parse_sqlresult(item)
             results.append(f)
-        return results
+        for fundinfo in results:
+            fundinfo.inter = len([i for i in stocks if i in fundinfo.stocks])
+            print fundinfo.inter
+        results.sort(lambda x,y: y.inter-x.inter)
+        return results[0:10]
 
     def __del__( self ):
         if self.db != None:
@@ -77,6 +85,9 @@ def printfunds(funds, simplify=True):
         else:
             print fund
 
+
 if __name__ == "__main__":
     a = IndexCompareAnalysis()
-    printfunds(a.test())
+    # sql = 'select * from fundinfo where size > 1 order by inforatio desc limit 10 '
+    # printfunds(a.query(sql))
+    printfunds(a.querycode('100032'), False)

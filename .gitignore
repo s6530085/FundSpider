@@ -91,3 +91,5 @@ test.db
 .idea/FundSpider.iml
 .idea/misc.xml
 .idea/workspace.xml
+IndexCompare/Fund.db
+IndexCompare/Fund.db-journal

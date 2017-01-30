@@ -9,6 +9,10 @@ def safetofloat(s, df=0.0):
     except:
         return df
 
+#除了普通的trip，顺便把头尾的斜杠去掉，只是用在本项目而已
+def sbtrip(s):
+    pass
+
 
 def testhehe():
     print 'hehe'

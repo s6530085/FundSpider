@@ -10,11 +10,13 @@ sys.setdefaultencoding('utf-8')
 class IndexCompareCollector(object):
 
     def __init__(self):
-        self.db = sqlite3.connect('test.db')
+        self.db = sqlite3.connect('Fund.db')
         cursor = self.db.cursor()
-        #数据库逐步扩展中 0.代码 1.全称 2.简称 3.规模 4.基金公司 5.经理 6.比较基准 7.追踪标的 8.范围 9.网页 10.机构持有比例 11.标准差 12.夏普比率 13.信息比例 14.跟踪误差 15.持仓 16.年化收益 17.收益排行
+
+        #数据库逐步扩展中 0.代码 1.全称 2.简称 3.类型 4.规模 5基金公司 6.经理 7.比较基准 8.追踪标的 9.范围 10.网页 11.机构持有比例 12.标准差 13.夏普比率 14.信息比例 15.跟踪误差 16.持仓 17.年化收益 18.收益排行
         cursor.execute('''
         create table if not exists {} (
+        {} text not null,
         {} text not null,
         {} text not null,
         {} text not null,
@@ -38,6 +40,7 @@ class IndexCompareCollector(object):
                    FundInfo.CODE_KEY,\
                    FundInfo.NAME_KEY,\
                    FundInfo.SHORTNAME_KEY,\
+                   FundInfo.TYPE_KEY,\
                    FundInfo.SIZE_KEY,\
                    FundInfo.COMPANY_KEY,\
                    FundInfo.MANAGER_KEY,\
@@ -59,10 +62,11 @@ class IndexCompareCollector(object):
 
     def addFund(self, fundInfo):
         #insert or replace 是sqlite特有的,以后如果升级sql需要注意这里
-        sql = "insert or replace into fundinfo ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}) "\
+        sql = "insert or replace into fundinfo ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}) "\
         .format(FundInfo.CODE_KEY,\
                 FundInfo.NAME_KEY,\
                 FundInfo.SHORTNAME_KEY,\
+                FundInfo.TYPE_KEY,\
                 FundInfo.SIZE_KEY,\
                 FundInfo.COMPANY_KEY,\
                 FundInfo.MANAGER_KEY,\
@@ -78,11 +82,29 @@ class IndexCompareCollector(object):
                 FundInfo.STOCKS_KEY,\
                 FundInfo.ANNUALYIELD_KEY,\
                 FundInfo.ANNUALRANK_KEY)
-        sql += "values ('''{0}''', '''{1}''', '''{2}''', {3}, '''{4}''', '''{5}''', '''{6}''', '''{7}''', '''{8}''', '''{9}''', {10}, {11}, {12}, {13}, {14}, '''{15}''', {16}, {17});"\
-        .format(fundInfo.code, fundInfo.name, fundInfo.shortname, fundInfo.size, fundInfo.company, u','.join(fundInfo.manager), fundInfo.compare, fundInfo.track, fundInfo.limits, fundInfo.url, fundInfo.inratio, fundInfo.std, fundInfo.sharperatio, fundInfo.inforatio, fundInfo.bias, u",".join(fundInfo.stocks), fundInfo.annualyield, fundInfo.annualrank)
+        sql += "values ('{0}', '{1}', '{2}', '{3}', {4}, '{5}', '{6}', '{7}', '{8}', '{9}', '{10}', {11}, {12}, {13}, {14}, {15}, '{16}', {17}, {18});"\
+        .format(fundInfo.code, fundInfo.name, fundInfo.shortname, fundInfo.type, fundInfo.size, fundInfo.company, u','.join(fundInfo.manager), fundInfo.compare, fundInfo.track, fundInfo.limits, fundInfo.url, fundInfo.inratio, fundInfo.std, fundInfo.sharperatio, fundInfo.inforatio, fundInfo.bias, u",".join(fundInfo.stocks), fundInfo.annualyield, fundInfo.annualrank)
         self.db.cursor().execute(sql)
         self.db.commit()
 
     def __del__( self ):
         if self.db != None:
             self.db.close()
+
+
+if __name__ == "__main__":
+    a = '"aaa"bbb\'ccc\''
+    print a.replace("'", '-').replace('"', "-")
+
+    # db = sqlite3.connect('fuckyou.db')
+    # cursor = db.cursor()
+    # cursor.execute('''
+    # create table if not exists hehe (
+    # xixi text not null,
+    # haha text not null
+    # );''')
+    # sql =  'insert into hehe (xixi, haha) values (\'\'\'zzza\'\'\', \"def\");'
+    # cursor.execute(sql)
+    # db.commit()
+    # a = "abc'''def'''"
+    # print a
