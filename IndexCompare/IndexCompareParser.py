@@ -24,7 +24,7 @@ class FundInfo(object):
     TYPE_CHINESE_KEY = u'基金类型'
 
     RELEASETIME_KEY = u'releasetime'
-    RELEASETIME_CHINESE_KEY = u'发行日期'
+    RELEASETIME_CHINESE_KEY = u'成立日期'
 
     SIZE_KEY = u'size'
     SIZE_CHINESE_KEY = u'资产规模'
@@ -85,8 +85,21 @@ class FundInfo(object):
     ANNUALRANK_KEY = u'annualrank'
     ANNUALRANK_CHINESE_KEY = u'同类排名'
 
-    ALL_KEYS = [CODE_KEY, NAME_KEY, SHORTNAME_KEY, TYPE_KEY, RELEASETIME_KEY, SIZE_KEY, COMPANY_KEY, MANAGER_KEY, COMPARE_KEY, TRACK_KEY, URL_KEY, INRATIO_KEY, STD_KEY, SHARPERATIO_KEY, INFORATIO_KEY, BIAS_KEY, STOCKS_KEY, ANNUALYIELD_KEY ,ANNUALRANK_KEY]
-    ALL_CHINESE_KEYS = [CODE_CHINESE_KEY, NAME_CHINESE_KEY, SHORTNAME_CHINESE_KEY, TYPE_CHINESE_KEY, RELEASETIME_CHINESE_KEY, SIZE_CHINESE_KEY, COMPANY_CHINESE_KEY, MANAGER_CHINESE_KEY, COMPARE_CHINESE_KEY, TRACK_CHINESE_KEY, URL_CHINESE_KEY, INRATIO_CHINESE_KEY, STD_CHINESE_KEY, SHARPERATIO_CHINESE_KEY, INFORATIO_CHINESE_KEY, BIAS_CHINESE_KEY, STOCKS_CHINESE_KEY, ANNUALYIELD_CHINESE_KEY ,ANNUALRANK_CHINESE_KEY]
+    #风格,可能是大盘稳健,小盘发展之类的
+    STYLE_KEY = u'style'
+    STYLE_CHINESE_KEY = u'基金投资风格'
+
+    #管理费用合计,没必要把四个都列出来,但麻烦的是,管理用和托管费自然是雷打不动,但是申购费特别是股票型可能打折极大,如果不用折扣后的数值很不实际,可这
+    #说到底是天天基金的折扣,有可能别的地方不一样,就凑合一下吧,另外就是赎回费用,很多开始n年后不收了,也只能凑合着记录最高赎回费了
+    FEE_KEY = u'fee'
+    FEE_CHINESE_KEY = u'管理费率合计'
+    MANAGE_FEE_CHINESE_KEY= u'管理费率'
+    COSTODY_FEE_CHINESE_KEY = u'托管费率'
+    BUY_FEE_CHINESE_KEY = u'最高申购费率'
+    SELL_FEE_CHINESE_KEY = u'最高赎回费率'
+
+    ALL_KEYS = [CODE_KEY, NAME_KEY, SHORTNAME_KEY, TYPE_KEY, RELEASETIME_KEY, SIZE_KEY, COMPANY_KEY, MANAGER_KEY, COMPARE_KEY, TRACK_KEY, URL_KEY, INRATIO_KEY, STD_KEY, SHARPERATIO_KEY, INFORATIO_KEY, BIAS_KEY, STOCKS_KEY, ANNUALYIELD_KEY ,ANNUALRANK_KEY, STYLE_KEY, FEE_KEY]
+    ALL_CHINESE_KEYS = [CODE_CHINESE_KEY, NAME_CHINESE_KEY, SHORTNAME_CHINESE_KEY, TYPE_CHINESE_KEY, RELEASETIME_CHINESE_KEY, SIZE_CHINESE_KEY, COMPANY_CHINESE_KEY, MANAGER_CHINESE_KEY, COMPARE_CHINESE_KEY, TRACK_CHINESE_KEY, URL_CHINESE_KEY, INRATIO_CHINESE_KEY, STD_CHINESE_KEY, SHARPERATIO_CHINESE_KEY, INFORATIO_CHINESE_KEY, BIAS_CHINESE_KEY, STOCKS_CHINESE_KEY, ANNUALYIELD_CHINESE_KEY ,ANNUALRANK_CHINESE_KEY, STYLE_CHINESE_KEY, FEE_CHINESE_KEY]
 
     def __init__(self):
         self.code = u''
@@ -110,6 +123,8 @@ class FundInfo(object):
         self.stocks = []
         self.annualyield = -1.0  # 这里用0也不一定妥当,因为可能会有负的收益,那么0反而是不亏的,所以就设置为一个负值,因为是年化,所以不可能低于-1
         self.annualrank = 1.0  # 为什么默认值为1呢,因为这个数值是越小越好,结果默认就是0的话,在排序时就可能搞的没数据的反而排最前面了
+        self.style = u''
+        self.fee = 0.0
         # 所有资讯都放在里面,键也是直接使用资讯的中文了嘻嘻
         self.raw_info = dict()
 
@@ -140,21 +155,24 @@ class FundInfo(object):
         self.name = sqlresult[1]
         self.shortname = sqlresult[2]
         self.type = sqlresult[3]
-        self.size = sqlresult[4]
-        self.company = sqlresult[5]
-        self.manager = sqlresult[6].split(u',')
-        self.compare = sqlresult[7]
-        self.track = sqlresult[8]
-        self.limits = sqlresult[9]
-        self.url = sqlresult[10]
-        self.inratio = sqlresult[11]
-        self.std = sqlresult[12]
-        self.sharperatio = sqlresult[13]
-        self.inforatio = sqlresult[14]
-        self.bias = sqlresult[15]
-        self.stocks = sqlresult[16].split(u',')
-        self.annualyield = sqlresult[17]
-        self.annualrank = sqlresult[18]
+        self.releasetime = sqlresult[4]
+        self.size = sqlresult[5]
+        self.company = sqlresult[6]
+        self.manager = sqlresult[7].split(u',')
+        self.compare = sqlresult[8]
+        self.track = sqlresult[9]
+        self.limits = sqlresult[10]
+        self.url = sqlresult[11]
+        self.inratio = sqlresult[12]
+        self.std = sqlresult[13]
+        self.sharperatio = sqlresult[14]
+        self.inforatio = sqlresult[15]
+        self.bias = sqlresult[16]
+        self.stocks = sqlresult[17].split(u',')
+        self.annualyield = sqlresult[18]
+        self.annualrank = sqlresult[19]
+        self.style = sqlresult[20]
+        self.fee = sqlresult[21]
 
     #解析基础数据f10
     def parse_base(self, content):
@@ -197,8 +215,12 @@ class FundInfo(object):
                 self.name = value
             elif key == FundInfo.TYPE_CHINESE_KEY:
                 self.type = value
-            elif key == FundInfo.RELEASETIME_CHINESE_KEY:
-                self.releasetime = value
+            elif key.startswith(FundInfo.RELEASETIME_CHINESE_KEY):
+                if len(value) > 0:
+                    value = value.split(u'/')[0].strip()
+                    #原始格式是YYYY年MM月dd日
+                    value = reduce(lambda a, kv: a.replace(*kv), {u"年":u"-",u"月":u"-",u"日":u""}.iteritems(), value)
+                    self.releasetime = value
             #去掉后面单位和描述只保留数字
             elif key == FundInfo.SIZE_CHINESE_KEY:
                 #某些基金新开或者其他原因没有规模
@@ -221,6 +243,24 @@ class FundInfo(object):
                 self.compare = value
             elif key == FundInfo.TRACK_CHINESE_KEY:
                 self.track = value
+            elif key == FundInfo.MANAGE_FEE_CHINESE_KEY:
+                if len(value.split("%")) > 0:
+                    self.fee += safetofloat(value.split('%')[0])
+            elif key == FundInfo.COSTODY_FEE_CHINESE_KEY:
+                if len(value.split("%")) > 0:
+                    self.fee += safetofloat(value.split('%')[0])
+            elif key == FundInfo.BUY_FEE_CHINESE_KEY:
+                #这里比较复杂,可能有天天基金的打折信息,先看看有没有打折吧
+                spans = tds[index].xpath('.//span')
+                if len(spans) == 3:
+                    self.fee += safetofloat(spans[2].text.split("%")[0])
+                elif len(spans) == 0:
+                    if len(value.split("%")) > 0:
+                        self.fee += safetofloat(value.split('%')[0])
+
+            elif key == FundInfo.SELL_FEE_CHINESE_KEY:
+                if len(value.split("%")) > 0:
+                    self.fee += safetofloat(value.split('%')[0])
 
         #然后是几个大的
         divs = html.xpath(u'//div[@class="boxitem w790"]//h4//label[@class="left" and text() != "基金分级信息"]')
@@ -287,6 +327,12 @@ class FundInfo(object):
         trackbias = html.xpath(u'//div[@id="jjzsfj"]//table[@class="fxtb"]//td')
         if len(trackbias) == 3:
             self.bias = safetofloat(trackbias[1].text.split('%')[0])
+
+        #投资风格,当然也可能没有
+        styles = html.xpath('//table[@class="fgtb"]//td')
+        if len(styles) >= 2:
+            #自然是取最近的就行了
+            self.style = styles[1].text.strip()
 
     def parse_stocks(self, content):
         html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
@@ -362,5 +408,17 @@ class IndexCompareParser(object):
         fund_info.url = fundurl
         return fund_info
 
+
 if __name__ == "__main__":
-    print ','.join([1,2,3,4,5])
+    html = '''
+    <td>zzzaaa
+	<span style="text-decoration:line-through;color:#666666">1.50%（前端）</span><br>
+	<span>天天基金优惠费率：
+		<span style="Color:#ff0000">0.15%（前端）</span>
+	</span>dddsss
+    </td>
+    '''
+    content = etree.HTML(html, parser=etree.HTMLParser(encoding='utf-8'))
+    spans = content.xpath('//td')
+    p = spans[0].text
+    print p

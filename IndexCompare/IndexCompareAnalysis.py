@@ -88,6 +88,4 @@ def printfunds(funds, simplify=True):
 
 if __name__ == "__main__":
     a = IndexCompareAnalysis()
-    # sql = 'select * from fundinfo where size > 1 order by inforatio desc limit 10 '
-    # printfunds(a.query(sql))
-    printfunds(a.querycode('100032'), False)
+    printfunds(a.querykeyword('中证医药'))
