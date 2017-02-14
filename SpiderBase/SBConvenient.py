@@ -3,6 +3,11 @@ __author__ = 'study_sun'
 
 __all__ = ["safetofloat"]
 
+import sys
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 def safetofloat(s, df=0.0):
     try:
         return float(s)

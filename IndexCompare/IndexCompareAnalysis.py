@@ -21,13 +21,16 @@ class IndexCompareAnalysis(object):
 
     #code和name都是只对相应值进行检索
     def querycode(self, code, order='', isasc=True):
-        return self.querybycol('code', code, order, isasc)
+        return self.querybycol(FundInfo.CODE_KEY, code, order, isasc)
 
     def queryname(self, name, order='', isasc=True):
-        return self.querybycol('name', name, order, isasc)
+        return self.querybycol(FundInfo.NAME_KEY, name, order, isasc)
 
     def querytrack(self, track, order='', isasc=True):
-        return self.querybycol('track', track, order, isasc)
+        return self.querybycol(FundInfo.TRACK_KEY, track, order, isasc)
+
+    def querystyle(self, style, order="", isasc=True):
+        return self.querybycol(FundInfo.STYLE_KEY, style, order, isasc)
 
     #其他方法懒得扩展了,如果想要检索
     def querybycol(self, colname, colvalue, order='', isasc=True):
@@ -88,4 +91,4 @@ def printfunds(funds, simplify=True):
 
 if __name__ == "__main__":
     a = IndexCompareAnalysis()
-    printfunds(a.querykeyword('中证医药'))
+    printfunds(a.querycode('001938'), False)

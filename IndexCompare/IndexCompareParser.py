@@ -9,7 +9,6 @@ sys.setdefaultencoding('utf-8')
 
 class FundInfo(object):
 
-    DATABASE_TABLE_NAME = u'fundinfo'
     #一些我比较感兴趣的资讯参数,默认大写的是类变量,小写的是成员变量
     CODE_KEY = u'code'
     CODE_CHINESE_KEY = u'基金代码'
@@ -20,6 +19,7 @@ class FundInfo(object):
     SHORTNAME_KEY = u'shortname'
     SHORTNAME_CHINESE_KEY = u'基金简称'
 
+    #股票型,债券型,有混合型,理财型,货币型,QDII,股票指数,联接基金
     TYPE_KEY = u'type'
     TYPE_CHINESE_KEY = u'基金类型'
 
@@ -85,7 +85,7 @@ class FundInfo(object):
     ANNUALRANK_KEY = u'annualrank'
     ANNUALRANK_CHINESE_KEY = u'同类排名'
 
-    #风格,可能是大盘稳健,小盘发展之类的
+    #风格,可能是(大盘|中盘|小盘)(价值|平衡|成长)之类的
     STYLE_KEY = u'style'
     STYLE_CHINESE_KEY = u'基金投资风格'
 
@@ -142,8 +142,15 @@ class FundInfo(object):
     def full_desc(self):
         format = u''
         for i, key in enumerate(FundInfo.ALL_KEYS):
-            format += FundInfo.ALL_CHINESE_KEYS[i] + ' : ' + getattr(self, key) + ' \n'
-        return format()
+            v = getattr(self, key)
+            if isinstance(v, float):
+                v = str(v)
+            elif isinstance(v, int):
+                v = str(v)
+            elif isinstance(v, list):
+                v = ','.join(v)
+            format += FundInfo.ALL_CHINESE_KEYS[i] + ' : ' + v + ' \n'
+        return format
         # return u'{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n'.format\
         #     (FundInfo.CODE_KEY, self.code, FundInfo.NAME_KEY, self.name, FundInfo.SHORTNAME_KEY, self.shortname,\
         #      FundInfo.SIZE_KEY, self.size, FundInfo.COMPANY_KEY, self.company, FundInfo.MANAGER_KEY, u",".join(self.manager),\
@@ -393,8 +400,9 @@ class IndexCompareParser(object):
             if aa != None:
                 match = pattern_capture.match(aa)
                 if match:
-                    l.append((match.group(1), match.group(2)))
-
+                    #名字没用,就只要编号即可
+                    # l.append((match.group(1), match.group(2)))
+                    l.append(match.group(1))
         return l
 
     #这里是解析每个基金的详情了,获得的东西很多,反正都在dict里,键可能会逐步增加,根据未来需要分析的东西扩展
@@ -418,7 +426,7 @@ if __name__ == "__main__":
 	</span>dddsss
     </td>
     '''
-    content = etree.HTML(html, parser=etree.HTMLParser(encoding='utf-8'))
-    spans = content.xpath('//td')
-    p = spans[0].text
-    print p
+    # content = etree.HTML(html, parser=etree.HTMLParser(encoding='utf-8'))
+    # spans = content.xpath('//td')
+    # p = spans[0].text
+    # print p

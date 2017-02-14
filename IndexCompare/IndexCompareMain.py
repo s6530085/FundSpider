@@ -28,19 +28,10 @@ class IndexCompareMain(object):
         finished_count = [0]
 
         for fund_info in funds_info:
-            (code, name) = fund_info
+            # (code, name) = fund_info
             #其实name根本没用到
-            self.url_manager.add_url(code)
+            self.url_manager.add_url(fund_info)
             count += 1
-            http://fund.eastmoney.com/160617.html
-# http://fund.eastmoney.com/000274.html
-# http://fund.eastmoney.com/002233.html
-# http://fund.eastmoney.com/003250.html
-# http://fund.eastmoney.com/003116.html
-# http://fund.eastmoney.com/000165.html
-# http://fund.eastmoney.com/167703.html
-# http://fund.eastmoney.com/000989.html
-# http://fund.eastmoney.com/001389.html
         # self.url_manager.add_url("100032")
         print '共需爬取基金详情 ' + str(count) + " 个"
 
