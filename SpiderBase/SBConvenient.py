@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 __author__ = 'study_sun'
 
-__all__ = ["safetofloat"]
+__all__ = ["safetofloat", "now_day"]
 
 import sys
+import datetime
+
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -21,6 +23,10 @@ def sbtrip(s):
 
 def testhehe():
     print 'hehe'
+
+#返回2017-12-02这样的字符串
+def now_day():
+    return datetime.datetime.now().strftime('%Y-%m-%d')
 
 
 if __name__ == "__main__":

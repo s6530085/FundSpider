@@ -14,7 +14,7 @@ class SBDownloader(object):
         if url is None:
             return None
 
-        response = urllib2.urlopen(url)
+        response = urllib2.urlopen(url,timeout=10)
         if response.getcode() != 200:
             return None
 

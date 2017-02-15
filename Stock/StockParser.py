@@ -8,6 +8,29 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+#股票的一日行情
+class StockQuotation(object):
+
+    CODE_KEY = 'code'
+    CODE_CHINESE_KEY = u'A股代码'
+
+    SHORT_NAME_KEY = 'shortname'
+    SHORT_NAME_CHINESE_KEY = u'A股简称'
+
+    PE_KEY = 'pe'
+    PE_CHINESE_KEY = u'静态市盈率'
+
+    PE_TTM_KEY = 'pe_ttm'
+    PE_TTM_CHINESE_KEY = u'动态市盈率'
+
+    PB_KEY = 'pb'
+    PB_CHINENE_KEY = u'市净率'
+
+    PRICE_KEY = 'price'
+
+
+
+
 class StockInfo(object):
 
     CODE_KEY = 'code'
@@ -88,11 +111,11 @@ class StockParser(object):
         return code.startswith('60') or code.startswith('00') or code.startswith('30')
 
 
-    #解析全股票代码
+    #解析全股票代码,返回形式是[(600000, 浦发银行)]
     def parse_home(self, content):
         #好气啊,又是源代码里写gb2312,实际要gbk才能解析的
-        html = etree.HTML(content, parser=etree.HTMLParser(encoding='gb2312'))
-        items = html.xpath('//li/a')
+        html = etree.HTML(content, parser=etree.HTMLParser(encoding='gbk'))
+        items = html.xpath('//div[@class="quotebody"]//li/a')
         stocks = []
         for item in items:
             #这个i是形如浦发银行(600000)
@@ -101,19 +124,23 @@ class StockParser(object):
                 name = i.split('(')[0]
                 code = i.split('(')[1][0:6]
                 if self._isstock(code):
-                    url = item.attribute('href')
-                    #url形如http://quote.eastmoney.com/sh600009.html,而我们只需要其中的sh600009即可
-                    url = url.split('/')[3].split('.')[0]
-                    stocks.append((code, name, url))
+                    stocks.append((code, name))
+                #     url = item.attribute('href')
+                #     #url形如http://quote.eastmoney.com/sh600009.html,而我们只需要其中的sh600009即可
+                #     url = url.split('/')[3].split('.')[0]
+                #     stocks.append((code, name, url))
 
         return stocks
 
-    def paser_stock(self, content):
+    #解析单个股票的基础信息
+    def parse_stock(self, content):
         stock = StockInfo()
 
         html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
 
         return stock
 
-
+    #解析单个股票行情
+    def parse_quotation(self, content):
+        pass
 

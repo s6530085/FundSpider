@@ -91,4 +91,4 @@ def printfunds(funds, simplify=True):
 
 if __name__ == "__main__":
     a = IndexCompareAnalysis()
-    printfunds(a.querycode('001938'), False)
+    printfunds(a.querycode('000001'), False)

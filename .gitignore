@@ -93,3 +93,4 @@ test.db
 .idea/workspace.xml
 IndexCompare/Fund.db
 IndexCompare/Fund.db-journal
+Stock.db

@@ -107,6 +107,11 @@ class IndexCompareCollector(object):
         if self.db != None:
             self.db.close()
 
+    def fundexist(self, code):
+        sql = 'select * from {} where {} = "{}";'.format(IndexCompareCollector.DATABASE_TABLE_NAME, FundInfo.CODE_KEY, code)
+        result = self.db.execute(sql).fetchall()
+        return len(result) > 0
+
 
 if __name__ == "__main__":
     pass
