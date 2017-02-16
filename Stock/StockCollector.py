@@ -3,7 +3,7 @@ __author__ = 'study_sun'
 import sqlite3
 import sys
 import datetime
-from StockParser import StockInfo
+from StockParser import StockInfo, StockQuotation
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -20,7 +20,18 @@ class StockCollector(object):
 
     def _create_stock_table(self, code):
         sql = '''
-        '''.format()
+        CREATE TABLE IF NOT EXISTS {} (
+        {} DATE PRIMARY KEY NOT NULL,
+        {}
+        );
+        '''.format(
+            self._stock_tablename(code),
+            StockQuotation.DATE_KEY,
+
+        )
+        self.db.execute('''
+        CREATE UNIQUE INDEX if not exists fund_code on {} ({});
+        '''.format(self._stock_tablename(code), StockQuotation.DATE_KEY))
         self.db.execute(sql)
 
 
@@ -39,6 +50,7 @@ class StockCollector(object):
         {} TEXT NOT NULL,
         {} TEXT NOT NULL,
         {} TEXT NOT NULL,
+        {} TEXT NOT NULL,
         {} DATE NOT NULL,
         {} TEXT NOT NULL
         );
@@ -49,6 +61,7 @@ class StockCollector(object):
                    StockInfo.USED_NAME_KEY,
                    StockInfo.MARKET_KEY,
                    StockInfo.INDUSTRY_KEY,
+                   StockInfo.AREA_KEY,
                    StockInfo.RELEASE_DATE_KEY,
                    StockInfo.URL_KEY)
         )
@@ -71,6 +84,7 @@ class StockCollector(object):
         #也有可能没有哦,没有的话就返回最大可能的期限
         result = self.db.execute(sql).fetchall()
         if len(result) == 0:
+            #如果没有的话,应该再去搜索一下基础数据表,获得其上市日期最好,当然其实这无所谓啦
             return (True, StockCollector.STOCK_BEGIN_DATE)
         else:
             return self._stock_really_need_update_date(result[0])
@@ -87,10 +101,37 @@ class StockCollector(object):
             return (False, '')
 
     def update_stock_info(self, stock_info):
-        pass
+        sql = u'INSERT OR REPLACE INTO {0} ({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}) '.format(
+            StockCollector.MAIN_TABLE_NAME,
+            StockInfo.CODE_KEY,
+            StockInfo.SHORT_NAME_KEY,
+            StockInfo.FULL_NAME_KEY,
+            StockInfo.USED_NAME_KEY,
+            StockInfo.MARKET_KEY,
+            StockInfo.INDUSTRY_KEY,
+            StockInfo.AREA_KEY,
+            StockInfo.RELEASE_DATE_KEY,
+            StockInfo.URL_KEY)
+        sql += u'VALUES ("{0}", "{1}", "{2}", "{3}", "{4}", "{5}", "{6}", {7}, "{8}");'.format(
+            stock_info.code,
+            stock_info.shortname,
+            stock_info.fullname,
+            u','.join(stock_info.usednames),
+            stock_info.market,
+            stock_info.industry,
+            stock_info.area,
+            stock_info.releasedate,
+            stock_info.url
+        )
+        self.db.execute(sql)
+        self.db.commit()
+
+        #建立了这个条目之后,就应该建立对应的表了,当然可能已经创建过了
+        self._create_stock_table(stock_info.code)
 
     def update_stock_quotation(self, stock_quotation):
         pass
+
 
 if __name__ == "__main__":
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

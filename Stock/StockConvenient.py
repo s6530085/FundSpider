@@ -23,7 +23,7 @@ def _code_market(code):
 def joint_code(code, net):
     fix = _code_market(code)
     if net == STOCK_QUOTATION_NET:
-        return fix + '_' + code
+        return 'cn_' + code
     elif net == STOCK_INFO_NET:
         return code + fix
     else:

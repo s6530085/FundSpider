@@ -10,10 +10,11 @@ sys.setdefaultencoding('utf-8')
 
 class StockURLManager(SBURLManager):
 
-    #比较诡异一些,返回的依次是(code, 基础信息url)
+    #比较诡异一些,返回的依次是(code, 基础信息url, 介绍页url)
     def pop_url(self):
         code = self.feed_urls.pop()
-        return (code, 'http://f10.eastmoney.com/f10_v2/CompanySurvey.aspx?code=' + joint_code(code, STOCK_INFO_NET))
+        return (code, 'http://f10.eastmoney.com/f10_v2/CompanySurvey.aspx?code=' + joint_code(code, STOCK_INFO_NET),
+                'http://quote.eastmoney.com/' + joint_code(code, STOCK_INFO_NET) + '.html')
 
     #行情url需要结合数据库,所以不能直接获得,如果是全量就获取a股开市日到今天的,如果是增量则获取起始日到今天的
     def joint_quotation_url(self, code, initdate):

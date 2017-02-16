@@ -32,7 +32,7 @@ class StockMain(object):
                 self.url_manager.transfer_url()
 
             while (not self.url_manager.is_empyt() and not self.url_manager.is_overflow()):
-                (code, url) = self.url_manager.pop_url()
+                (code, url, infourl) = self.url_manager.pop_url()
                 #股票基本信息几乎不会更新,只有强制更新或没有的时候再刷吧
                 if not incremental or not self.collector.is_stock_existsin_main(code):
                     stock_content = self.html_downloader.download(url)
@@ -41,8 +41,10 @@ class StockMain(object):
                         self.url_manager.fail_url(code)
                         continue
                     stock_info = self.html_paser.parse_stock(stock_content)
+                    stock_info.url = infourl
                     self.collector.update_stock_info(stock_info)
 
+                continue
                 #全量就自然是从头开始获取,增量的话会先看数据库,找到最新一条的第二天开始获取,但如果数据库没有,一样是从头获取
                 need_update = True
                 initdate = datetime.datetime.now().strftime('%Y-%m-%d')
@@ -65,4 +67,4 @@ class StockMain(object):
 
 if __name__ == "__main__":
     sk = StockMain()
-    sk.craw('http://quote.eastmoney.com/stocklist.html')
+    sk.craw('http://quote.eastmoney.com/stocklist.html', incremental=False)
