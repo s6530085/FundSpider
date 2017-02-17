@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'study_sun'
 from lxml import etree
-import json
-
+import xlrd
 import sys
 
 reload(sys)
@@ -33,11 +32,13 @@ class StockQuotation(object):
 
     #其实很多东西目前用不到,比如成交量等,但既然服务器给了,就先存起来吧
 
-    ALL_KEYS = []
-    ALL_CHINENE_KEYS = []
+    ALL_KEYS = [DATE_KEY, PE_TTM_KEY, PB_KEY]
+    ALL_CHINENE_KEYS = [DATE_CHINESE_KEY, PE_TTM_CHINESE_KEY, PB_CHINENE_KEY]
 
     def __init__(self):
-        pass
+        self.date = u''
+        self.pe_ttm = 0.0
+        self.pb = 0.0
 
     def parse_sqlresult(self, sqlresult):
         pass
@@ -47,7 +48,7 @@ class StockQuotation(object):
 
     #简单的就只打印日期,pe和pb
     def short_desc(self):
-        return u'{}: {} {}: {} {}: {} '.format(StockQuotation.DATE, self.code, StockInfo.SHORT_NAME_CHINESE_KEY, StockInfo.shortname, StockInfo.URL_CHINESE_KEY, StockInfo.url)
+        return u'{}: {} {}: {} {}: {} '.format(StockQuotation.DATE, self.date, StockQuotation.PE_TTM_CHINESE_KEY, self.pe_ttm, StockQuotation.PB_CHINENE_KEY, self.pb)
 
 
     #全称吗自然全打印咯
@@ -204,9 +205,8 @@ class StockParser(object):
         return stock
 
     #解析单个股票行情,喷了,最后发现搜狐没有pe指标,雪球只有当天的,新浪有但是不准
-    def parse_quotation(self, content):
-        #这个json最外层其实不算,先去掉
-        parsed_json = json.loads(content)
-        a = 100
+    def parse_quotation(self, code):
+        table = xlrd.open_workbook('pe_history.xlsx')
+
 
 

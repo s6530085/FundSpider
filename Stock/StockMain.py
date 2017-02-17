@@ -51,6 +51,7 @@ class StockMain(object):
                 if incremental:
                     (need_update,initdate) = self.collector.stock_last_update_date(code)
                 if need_update:
+                    #不好意思没有
                     quotation_url = self.url_manager.joint_quotation_url(code, initdate)
                     quotation_content = self.html_downloader.download(quotation_url)
                     if quotation_content is None or len(quotation_content) == 0:
