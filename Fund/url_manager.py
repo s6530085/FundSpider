@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from enum import Enum, unique
-from SpiderBase import SBURLManager
+from spider_base import SBURLManager
 
 @unique
 class FundURLIndex(Enum):

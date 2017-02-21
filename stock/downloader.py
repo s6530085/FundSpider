@@ -6,7 +6,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-from SpiderBase import SBDownloader
+from spider_base import SBDownloader
 
 class StockDownloader(SBDownloader):
     pass

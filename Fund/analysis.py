@@ -3,7 +3,7 @@ __author__ = 'study_sun'
 import sqlite3
 import sys
 import re
-from parser import FundInfo
+from entity import FundInfo
 reload(sys)
 sys.setdefaultencoding('utf-8')
 

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 __author__ = 'study_sun'
-from SpiderBase import SBURLManager
+from spider_base import SBURLManager
 import sys
-from SpiderBase.SBConvenient import now_day
-from StockConvenient import *
+from spider_base.convenient import now_day
+from convenient import *
 
 reload(sys)
 sys.setdefaultencoding('utf-8')

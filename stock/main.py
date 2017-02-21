@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 __author__ = 'study_sun'
-from StockParser import *
-from StockURLManager import *
-from StockDownloader import *
-from StockCollector import *
+from parser import *
+from url_manager import *
+from downloader import *
+from collector import *
 import datetime
 
 import sys

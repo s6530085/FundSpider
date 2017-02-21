@@ -3,7 +3,7 @@ __author__ = 'study_sun'
 import sqlite3
 import sys
 import datetime
-from StockParser import StockInfo, StockQuotation
+from parser import StockInfo, StockQuotation
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
