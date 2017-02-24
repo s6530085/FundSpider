@@ -18,28 +18,28 @@ class FundCollector(object):
 
         #数据库逐步扩展中 0.代码 1.全称 2.简称 3.类型 4.成立日期 5.规模 6.基金公司 7.经理 8.比较基准 9.追踪标的 10.范围 11.网页 12.机构持有比例 13.标准差 14.夏普比率 15.信息比例 16.跟踪误差 17.持仓 18.年化收益 19.收益排行 20.投资风格 21.费用
         cursor.execute('''
-        create table if not exists {} (
-        {} text PRIMARY KEY not null,
-        {} text not null,
-        {} text not null,
-        {} text not null,
-        {} text not null,
+        CREATE TABLE IF NOT EXISTS {} (
+        {} TEXT PRIMARY KEY NOT NULL,
+        {} TEXT NOT NULL,
+        {} TEXT NOT NULL,
+        {} TEXT NOT NULL,
+        {} TEXT NOT NULL,
         {} numeric not null,
-        {} text not null,
-        {} text not null,
-        {} text not null,
-        {} text not null,
-        {} text not null,
-        {} text not null,
+        {} TEXT NOT NULL,
+        {} TEXT NOT NULL,
+        {} TEXT NOT NULL,
+        {} TEXT NOT NULL,
+        {} TEXT NOT NULL,
+        {} TEXT NOT NULL,
         {} numberic not null,
         {} numberic not null,
         {} numberic not null,
         {} numberic not null,
         {} numberic not null,
-        {} text not null,
+        {} TEXT NOT NULL,
         {} numberic not null,
         {} numberic not null,
-        {} text not null,
+        {} TEXT NOT NULL,
         {} numberic not null
         );
         '''.format(FundCollector.DATABASE_TABLE_NAME, \

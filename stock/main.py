@@ -19,7 +19,8 @@ class StockMain(object):
         self.html_paser = StockParser()
         self.collector = StockCollector()
 
-    def craw(self, homeurl, incremental=True):
+    def craw(self, incremental=True):
+        homeurl = 'http://quote.eastmoney.com/stocklist.html'
         #除非指定全量更新,否则都是自动检查是否需要全量的
         #首页怎么都要来一次
         stock_home = self.html_downloader.download(homeurl)
@@ -68,4 +69,4 @@ class StockMain(object):
 
 if __name__ == "__main__":
     sk = StockMain()
-    sk.craw('http://quote.eastmoney.com/stocklist.html', incremental=False)
+    sk.craw(incremental=False)
