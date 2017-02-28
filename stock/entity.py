@@ -3,16 +3,13 @@ __author__ = 'study_sun'
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
-from spider_base.entity import *
+from spider_base.entity import SBObject
 
 #股票的一日行情
-class StockQuotation(object):
+class StockQuotation(SBObject):
 
     DATE_KEY = 's_date'
     DATE_CHINESE_KEY = u'日期'
-
-    PE_KEY = 'pe'
-    PE_CHINESE_KEY = u'静态市盈率'
 
     PE_TTM_KEY = 'pe_ttm'
     PE_TTM_CHINESE_KEY = u'动态市盈率'
@@ -20,48 +17,50 @@ class StockQuotation(object):
     PB_KEY = 'pb'
     PB_CHINENE_KEY = u'市净率'
 
+    #其实很多东西目前用不到,比如成交量等,但既然服务器给了,就先存起来吧
+    #另外就是历史数据也是很多没有的,但可以保证一定有pe_ttm和pb可供分析
+    PE_KEY = 'pe'
+    PE_CHINESE_KEY = u'静态市盈率'
+
     OPENING_PRICE_KEY = 'opening_price'
     OPENING_PRICE_CHINESE_KEY = u'开盘价'
 
     CLOSING_PRICE_KEY = 'closing_price'
     CLOSING_PRICE_CHINESE_KEY = u'收盘价'
 
+    YIELD_KEY = 'yield_rate'
+    YIELD_CHINESE_KEY = u'股息率'
 
+    @classmethod
+    def all_keys(cls):
+        return [StockQuotation.DATE_KEY, StockQuotation.PE_TTM_KEY, StockQuotation.PB_KEY, StockQuotation.PE_KEY,
+                StockQuotation.OPENING_PRICE_KEY, StockQuotation.CLOSING_PRICE_KEY, StockQuotation.YIELD_KEY]
 
-    #其实很多东西目前用不到,比如成交量等,但既然服务器给了,就先存起来吧
-
-    ALL_KEYS = [DATE_KEY, PE_TTM_KEY, PB_KEY]
-    ALL_CHINENE_KEYS = [DATE_CHINESE_KEY, PE_TTM_CHINESE_KEY, PB_CHINENE_KEY]
+    @classmethod
+    def all_desc_keys(cls):
+        return [StockQuotation.DATE_CHINESE_KEY, StockQuotation.PE_TTM_CHINESE_KEY, StockQuotation.PB_CHINENE_KEY,
+                StockQuotation.PE_CHINESE_KEY, StockQuotation.OPENING_PRICE_CHINESE_KEY,
+                StockQuotation.CLOSING_PRICE_CHINESE_KEY, StockQuotation.YIELD_CHINESE_KEY]
 
     def __init__(self):
         self.date = u''
         self.pe_ttm = 0.0
         self.pb = 0.0
+        self.pe = 0.0
+        self.opening_price = 0.0
+        self.closing_price = 0.0
+        self.yield_rate = 0.0
+
 
     def parse_sqlresult(self, sqlresult):
-        pass
+        self.date = sqlresult[0]
+        self.pe_ttm = sqlresult[1]
+        self.pb = sqlresult[2]
 
-    def __str__(self):
-        return self.full_desc()
 
     #简单的就只打印日期,pe和pb
     def short_desc(self):
         return u'{}: {} {}: {} {}: {} '.format(StockQuotation.DATE, self.date, StockQuotation.PE_TTM_CHINESE_KEY, self.pe_ttm, StockQuotation.PB_CHINENE_KEY, self.pb)
-
-
-    #全称吗自然全打印咯
-    def full_desc(self):
-        format = u''
-        for i, key in enumerate(StockInfo.ALL_KEYS):
-            v = getattr(self, key)
-            if isinstance(v, float):
-                v = str(v)
-            elif isinstance(v, int):
-                v = str(v)
-            elif isinstance(v, list):
-                v = ','.join(v)
-            format += StockInfo.ALL_CHINESE_KEYS[i] + ' : ' + v + ' \n'
-        return format
 
 
 class StockInfo(SBObject):

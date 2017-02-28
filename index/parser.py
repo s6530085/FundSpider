@@ -33,3 +33,4 @@ class IndexParser(object):
                     index.weave = tds[4].text.strip()
                 indexs.append(index)
         return indexs
+

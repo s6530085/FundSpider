@@ -3,6 +3,7 @@ __author__ = 'study_sun'
 import sqlite3
 import sys
 import datetime
+import xlrd
 from entity import StockInfo, StockQuotation
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -66,21 +67,32 @@ class StockCollector(object):
                    StockInfo.URL_KEY)
         )
         self.db.execute('''
-        CREATE UNIQUE INDEX if not exists fund_code on {} ({});
+        CREATE UNIQUE INDEX IF NOT EXISTS fund_code ON {} ({});
         '''.format(StockCollector.MAIN_TABLE_NAME, StockInfo.CODE_KEY))
 
     # def updatestockstable(self, stocks):
     #     for (code, name, url) in stocks:
 
 
-    def is_stock_existsin_main(self, code):
+    def is_stock_exists_in_main(self, code):
         result = self.db.cursor().execute('select * from {} where {} = "{}"'.format(StockCollector.MAIN_TABLE_NAME, StockInfo.CODE_KEY, code)).fetchall()
         return len(result) > 0
 
+    #该股票是否需要更新今日行情
+    def is_stock_need_update_quotation(self, code):
+        #如果今日根本没行情,那自然不需要
+        weekday = datetime.now().weekday()
+        #简单的看是不是周六周日,其实应该看开没开市,但是我不会
+        if weekday == 5 or weekday == 6:
+            return False
+        #再看看数据库里是不是已经有数据了
+        (_, last_date) = self.stock_last_update_date(code)
+        if last_date < datetime.now():
+            return True
 
     #某只股票的行情最后更新时间,其实理论上每个最后更新时间应该都是一样的,
     def stock_last_update_date(self, code):
-        sql = 'select {} from {} order by {} desc limit 1'.format(StockInfo.RELEASE_DATE_KEY, self._stock_tablename(code), StockInfo.RELEASE_DATE_KEY)
+        sql = 'SELECT {} FROM {} ORDER BY {} DESC LIMIT 1'.format(StockInfo.RELEASE_DATE_KEY, self._stock_tablename(code), StockInfo.RELEASE_DATE_KEY)
         #也有可能没有哦,没有的话就返回最大可能的期限
         result = self.db.execute(sql).fetchall()
         if len(result) == 0:
@@ -129,8 +141,15 @@ class StockCollector(object):
         #建立了这个条目之后,就应该建立对应的表了,当然可能已经创建过了
         self._create_stock_table(stock_info.code)
 
-    def update_stock_quotation(self, stock_quotation):
+    #加载历史的行情,从excel中加载
+    def load_stock_history_quotation(self, stock_code):
         pass
+
+    #更新当天行情
+    def update_stock_quotation(self, stock_quotation):
+        sql = u'INSERT OR REPLACE INTO {0} ()'
+
+
 
 
 if __name__ == "__main__":

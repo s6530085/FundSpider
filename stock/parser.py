@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 __author__ = 'study_sun'
 from lxml import etree
-import xlrd
 import sys
-from entity import StockInfo
+import json
+import datetime
+from entity import StockInfo, StockQuotation
+from spider_base.convenient import *
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -67,9 +69,18 @@ class StockParser(object):
 
         return stock
 
-    #解析单个股票行情,喷了,最后发现搜狐没有pe指标,雪球只有当天的,新浪有但是不准
-    def parse_quotation(self, code):
-        table = xlrd.open_workbook('pe_history.xlsx')
-
-
+    #不好意思,比较准的数据如果靠爬虫只有当天的
+    #https://xueqiu.com/v4/stock/quote.json?code=SZ399001&_=1460380110118
+    def parse_quotation(self, quotation_content):
+        content = json.loads(quotation_content, encoding='utf-8')
+        quotation = content.values()[0]
+        quotation_info = StockQuotation()
+        quotation_info.date = datetime.datetime.now().strftime("%Y-%m-%d")
+        quotation_info.pe_ttm = safetofloat(quotation['pe_ttm'])
+        quotation_info.pb = safetofloat(quotation['pb'])
+        quotation_info.pe = safetofloat(quotation['pe_lyr'])
+        quotation_info.opening_price = safetofloat(quotation['open'])
+        quotation_info.closing_price = safetofloat(quotation['close'])
+        quotation_info.yield_rate = safetofloat(quotation['yield'])
+        return quotation_info
 

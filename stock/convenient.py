@@ -5,7 +5,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-STOCK_QUOTATION_NET = 'sohu'
+STOCK_QUOTATION_NET = 'snowball'
 STOCK_INFO_NET = 'eastmoney'
 
 def _code_market(code):
@@ -23,7 +23,7 @@ def _code_market(code):
 def joint_code(code, net):
     fix = _code_market(code)
     if net == STOCK_QUOTATION_NET:
-        return 'cn_' + code
+        return fix + code
     elif net == STOCK_INFO_NET:
         return code + fix
     else:
