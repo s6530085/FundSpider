@@ -23,12 +23,14 @@ class StockCollector(object):
         sql = '''
         CREATE TABLE IF NOT EXISTS {} (
         {} DATE PRIMARY KEY NOT NULL,
-        {}
+        {} NUMBERIC NOT NULL,
+        {} NUMBERIC NOT NULL,
         );
         '''.format(
             self._stock_tablename(code),
             StockQuotation.DATE_KEY,
-
+            StockQuotation.PE_TTM_KEY,
+            StockQuotation.PB_KEY
         )
         self.db.execute('''
         CREATE UNIQUE INDEX if not exists fund_code on {} ({});
@@ -146,8 +148,22 @@ class StockCollector(object):
         pass
 
     #更新当天行情
-    def update_stock_quotation(self, stock_quotation):
-        sql = u'INSERT OR REPLACE INTO {0} ()'
+    def update_stock_quotation(self, code, stock_quotation):
+        sql = u'INSERT OR REPLACE INTO {0} ({1}, {2}, {3}) '.format(
+            self._stock_tablename(code),
+            StockQuotation.DATE_KEY,
+            StockQuotation.PE_TTM_KEY,
+            StockQuotation.PB_KEY
+        )
+        sql += u'VALUES ("{0}", {1}, {2});'.format(
+            stock_quotation.date,
+            stock_quotation.pe_ttm,
+            stock_quotation.pb
+        )
+
+        self.db.execute(sql)
+        self.db.commit()
+
 
 
 

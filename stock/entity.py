@@ -17,7 +17,7 @@ class StockQuotation(SBObject):
     PB_KEY = 'pb'
     PB_CHINENE_KEY = u'市净率'
 
-    #其实很多东西目前用不到,比如成交量等,但既然服务器给了,就先存起来吧
+    #其实很多东西目前用不到,先写个key占位,但没有存储到数据库里,防止因为空数据导致过大
     #另外就是历史数据也是很多没有的,但可以保证一定有pe_ttm和pb可供分析
     PE_KEY = 'pe'
     PE_CHINESE_KEY = u'静态市盈率'
@@ -33,29 +33,32 @@ class StockQuotation(SBObject):
 
     @classmethod
     def all_keys(cls):
-        return [StockQuotation.DATE_KEY, StockQuotation.PE_TTM_KEY, StockQuotation.PB_KEY, StockQuotation.PE_KEY,
-                StockQuotation.OPENING_PRICE_KEY, StockQuotation.CLOSING_PRICE_KEY, StockQuotation.YIELD_KEY]
+        return [StockQuotation.DATE_KEY, StockQuotation.PE_TTM_KEY, StockQuotation.PB_KEY
+            # , StockQuotation.PE_KEY,StockQuotation.OPENING_PRICE_KEY, StockQuotation.CLOSING_PRICE_KEY, StockQuotation.YIELD_KEY
+                ]
 
     @classmethod
     def all_desc_keys(cls):
         return [StockQuotation.DATE_CHINESE_KEY, StockQuotation.PE_TTM_CHINESE_KEY, StockQuotation.PB_CHINENE_KEY,
-                StockQuotation.PE_CHINESE_KEY, StockQuotation.OPENING_PRICE_CHINESE_KEY,
-                StockQuotation.CLOSING_PRICE_CHINESE_KEY, StockQuotation.YIELD_CHINESE_KEY]
+                # StockQuotation.PE_CHINESE_KEY, StockQuotation.OPENING_PRICE_CHINESE_KEY,
+                # StockQuotation.CLOSING_PRICE_CHINESE_KEY, StockQuotation.YIELD_CHINESE_KEY
+                ]
 
     def __init__(self):
         self.date = u''
         self.pe_ttm = 0.0
         self.pb = 0.0
-        self.pe = 0.0
-        self.opening_price = 0.0
-        self.closing_price = 0.0
-        self.yield_rate = 0.0
+        # self.pe = 0.0
+        # self.opening_price = 0.0
+        # self.closing_price = 0.0
+        # self.yield_rate = 0.0
 
 
     def parse_sqlresult(self, sqlresult):
         self.date = sqlresult[0]
         self.pe_ttm = sqlresult[1]
         self.pb = sqlresult[2]
+        # self.pe = sqlresult[3]
 
 
     #简单的就只打印日期,pe和pb
