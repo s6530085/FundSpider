@@ -19,12 +19,12 @@ class StockCollector(object):
     def _stock_tablename(self, code):
         return 'stock_' + code
 
-    def _create_stock_table(self, code):
-        sql = '''
+    def _create_stock_quotation_table(self, code):
+        sql ='''
         CREATE TABLE IF NOT EXISTS {} (
         {} DATE PRIMARY KEY NOT NULL,
         {} NUMBERIC NOT NULL,
-        {} NUMBERIC NOT NULL,
+        {} NUMBERIC NOT NULL
         );
         '''.format(
             self._stock_tablename(code),
@@ -32,10 +32,10 @@ class StockCollector(object):
             StockQuotation.PE_TTM_KEY,
             StockQuotation.PB_KEY
         )
-        self.db.execute('''
-        CREATE UNIQUE INDEX if not exists fund_code on {} ({});
-        '''.format(self._stock_tablename(code), StockQuotation.DATE_KEY))
         self.db.execute(sql)
+        self.db.execute('''
+        CREATE UNIQUE INDEX IF NOT EXISTS fund_code ON {} ({});
+        '''.format(self._stock_tablename(code), StockQuotation.DATE_KEY))
 
 
     def __init__(self):
@@ -54,7 +54,7 @@ class StockCollector(object):
         {} TEXT NOT NULL,
         {} TEXT NOT NULL,
         {} TEXT NOT NULL,
-        {} DATE NOT NULL,
+        {} TEXT NOT NULL,
         {} TEXT NOT NULL
         );
         '''.format(StockCollector.MAIN_TABLE_NAME,
@@ -72,29 +72,30 @@ class StockCollector(object):
         CREATE UNIQUE INDEX IF NOT EXISTS fund_code ON {} ({});
         '''.format(StockCollector.MAIN_TABLE_NAME, StockInfo.CODE_KEY))
 
-    # def updatestockstable(self, stocks):
-    #     for (code, name, url) in stocks:
-
 
     def is_stock_exists_in_main(self, code):
-        result = self.db.cursor().execute('select * from {} where {} = "{}"'.format(StockCollector.MAIN_TABLE_NAME, StockInfo.CODE_KEY, code)).fetchall()
+        result = self.db.cursor().execute('select * from {} where {} = "{}"'.format(
+            StockCollector.MAIN_TABLE_NAME, StockInfo.CODE_KEY, code)).fetchall()
         return len(result) > 0
 
     #该股票是否需要更新今日行情
     def is_stock_need_update_quotation(self, code):
-        #如果今日根本没行情,那自然不需要
-        weekday = datetime.now().weekday()
-        #简单的看是不是周六周日,其实应该看开没开市,但是我不会
-        if weekday == 5 or weekday == 6:
-            return False
-        #再看看数据库里是不是已经有数据了
+        #逻辑稍显复杂,首先如果今日已经更新过了,自然是不需要重复更新的
         (_, last_date) = self.stock_last_update_date(code)
-        if last_date < datetime.now():
-            return True
+        if last_date >= datetime.datetime.now().strftime("%Y-%m-%d"):
+            return False
+        #其他的可能性太多了,比如碰巧遇到休市的日子,这没法控制,还有就是今天是周六,但是周五忘记获取了,其实也是可以拿的,所以手动简化下
+        #只要不是今天已经获取过了,就强行再获取一次
+        return True
+        # weekday = datetime.now().weekday()
+        # if weekday == 5 or weekday == 6:
+        #     return False
+
+
 
     #某只股票的行情最后更新时间,其实理论上每个最后更新时间应该都是一样的,
     def stock_last_update_date(self, code):
-        sql = 'SELECT {} FROM {} ORDER BY {} DESC LIMIT 1'.format(StockInfo.RELEASE_DATE_KEY, self._stock_tablename(code), StockInfo.RELEASE_DATE_KEY)
+        sql = 'SELECT {} FROM {} ORDER BY {} DESC LIMIT 1'.format(StockQuotation.DATE_KEY, self._stock_tablename(code), StockQuotation.DATE_KEY)
         #也有可能没有哦,没有的话就返回最大可能的期限
         result = self.db.execute(sql).fetchall()
         if len(result) == 0:
@@ -126,7 +127,7 @@ class StockCollector(object):
             StockInfo.AREA_KEY,
             StockInfo.RELEASE_DATE_KEY,
             StockInfo.URL_KEY)
-        sql += u'VALUES ("{0}", "{1}", "{2}", "{3}", "{4}", "{5}", "{6}", {7}, "{8}");'.format(
+        sql += u'VALUES ("{0}", "{1}", "{2}", "{3}", "{4}", "{5}", "{6}", "{7}", "{8}");'.format(
             stock_info.code,
             stock_info.shortname,
             stock_info.fullname,
@@ -141,10 +142,11 @@ class StockCollector(object):
         self.db.commit()
 
         #建立了这个条目之后,就应该建立对应的表了,当然可能已经创建过了
-        self._create_stock_table(stock_info.code)
+        self._create_stock_quotation_table(stock_info.code)
 
     #加载历史的行情,从excel中加载
     def load_stock_history_quotation(self, stock_code):
+        #暂时还没处理好excel的文本
         pass
 
     #更新当天行情
@@ -163,9 +165,6 @@ class StockCollector(object):
 
         self.db.execute(sql)
         self.db.commit()
-
-
-
 
 
 if __name__ == "__main__":

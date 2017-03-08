@@ -65,6 +65,8 @@ class StockParser(object):
             elif key == StockInfo.AREA_CHINESE_KEY:
                 stock.area = value
             elif key == StockInfo.RELEASE_DATE_CHINESE_KEY:
+                if value == '--':
+                    value = ''
                 stock.releasedate = value
 
         return stock
@@ -76,11 +78,20 @@ class StockParser(object):
         quotation = content.values()[0]
         quotation_info = StockQuotation()
         quotation_info.date = datetime.datetime.now().strftime("%Y-%m-%d")
-        quotation_info.pe_ttm = safetofloat(quotation['pe_ttm'])
-        quotation_info.pb = safetofloat(quotation['pb'])
-        quotation_info.pe = safetofloat(quotation['pe_lyr'])
-        quotation_info.opening_price = safetofloat(quotation['open'])
-        quotation_info.closing_price = safetofloat(quotation['close'])
-        quotation_info.yield_rate = safetofloat(quotation['yield'])
+        #不过可能是各种情况失败的json哦
+        if isinstance(quotation, basestring):
+            quotation_info.pe_ttm = 0.0
+            quotation_info.pb = 0.0
+            quotation_info.pe = 0.0
+            quotation_info.opening_price = 0.0
+            quotation_info.closing_price = 0.0
+            quotation_info.yield_rate = 0.0
+        else:
+            quotation_info.pe_ttm = safetofloat(quotation['pe_ttm'])
+            quotation_info.pb = safetofloat(quotation['pb'])
+            quotation_info.pe = safetofloat(quotation['pe_lyr'])
+            quotation_info.opening_price = safetofloat(quotation['open'])
+            quotation_info.closing_price = safetofloat(quotation['close'])
+            quotation_info.yield_rate = safetofloat(quotation['yield'])
         return quotation_info
 

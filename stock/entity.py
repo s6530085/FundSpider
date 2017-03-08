@@ -77,7 +77,7 @@ class StockInfo(SBObject):
     FULL_NAME_KEY = 'fullname'
     FULL_NAME_CHINESE_KEY = u'公司名称'
 
-    USED_NAME_KEY = 'usedname'
+    USED_NAME_KEY = 'used_names'
     USED_NAME_CHINESE_KEY = u'曾用名'
 
     MARKET_KEY = 'market'
@@ -90,7 +90,7 @@ class StockInfo(SBObject):
     AREA_KEY = 'area'
     AREA_CHINESE_KEY = u'区域'
 
-    RELEASE_DATE_KEY = 'releasedata'
+    RELEASE_DATE_KEY = 'release_date'
     RELEASE_DATE_CHINESE_KEY = u'上市日期'
 
     URL_KEY = u'url'
@@ -111,22 +111,22 @@ class StockInfo(SBObject):
         self.code = u''
         self.shortname = u''
         self.fullname = u''
-        self.usednames = []
+        self.used_names = []
         self.market = u''
         self.industry = u''
         self.area = u''
-        self.releasedate = u''
+        self.release_date = u''
         self.url = u''
 
     def parse_sqlresult(self, sqlresult):
         self.code = sqlresult[0]
         self.shortname = sqlresult[1]
         self.fullname = sqlresult[2]
-        self.usednames = sqlresult[3].split(',')
+        self.used_names = sqlresult[3].split(',')
         self.market = sqlresult[4]
         self.industry = sqlresult[5]
         self.area = sqlresult[6]
-        self.releasedate = sqlresult[7]
+        self.release_date = sqlresult[7]
         self.url = sqlresult[8]
 
 

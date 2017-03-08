@@ -89,20 +89,6 @@ def printfunds(funds, simplify=True):
             print fund
 
 
-class Base(object):
-    def __init__(self):
-        self.hehe = 100
-        print 'base init'
-
-class Derive(Base):
-    def __init__(self):
-        self.xixi = 200
-        super(Derive, self).__init__()
-
-        print 'derive init'
-
 if __name__ == "__main__":
-    # a = FundAnalysis()
-    # printfunds(a.querycode('000001'), False)
-    d = Derive()
-    print d.hehe
+    a = FundAnalysis()
+    printfunds(a.querytrack('中证500'))

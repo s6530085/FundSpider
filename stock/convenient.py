@@ -25,7 +25,7 @@ def joint_code(code, net):
     if net == STOCK_QUOTATION_NET:
         return fix + code
     elif net == STOCK_INFO_NET:
-        return code + fix
+        return fix + code
     else:
         return ''
 

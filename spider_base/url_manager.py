@@ -44,3 +44,4 @@ class SBURLManager(object):
 
     def transfer_url(self):
         self.feed_urls = self.feed_urls.union(self.failed_urls)
+        self.failed_urls.clear()

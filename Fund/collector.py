@@ -24,23 +24,23 @@ class FundCollector(object):
         {} TEXT NOT NULL,
         {} TEXT NOT NULL,
         {} TEXT NOT NULL,
-        {} numeric not null,
+        {} NUMBERIC NOT NULL,
         {} TEXT NOT NULL,
         {} TEXT NOT NULL,
         {} TEXT NOT NULL,
         {} TEXT NOT NULL,
         {} TEXT NOT NULL,
         {} TEXT NOT NULL,
-        {} numberic not null,
-        {} numberic not null,
-        {} numberic not null,
-        {} numberic not null,
-        {} numberic not null,
+        {} NUMBERIC NOT NULL,
+        {} NUMBERIC NOT NULL,
+        {} NUMBERIC NOT NULL,
+        {} NUMBERIC NOT NULL,
+        {} NUMBERIC NOT NULL,
         {} TEXT NOT NULL,
-        {} numberic not null,
-        {} numberic not null,
+        {} NUMBERIC NOT NULL,
+        {} NUMBERIC NOT NULL,
         {} TEXT NOT NULL,
-        {} numberic not null
+        {} NUMBERIC NOT NULL
         );
         '''.format(FundCollector.DATABASE_TABLE_NAME, \
                    FundInfo.CODE_KEY, \

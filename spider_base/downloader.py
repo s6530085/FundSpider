@@ -20,13 +20,8 @@ class SBDownloader(object):
             return response.text
         else:
             response = session.get(url, headers=headers)
-            if response.status_code != requests.codes.ok:
+            if response.status_code == requests.codes.ok or response.status_code == requests.codes.bad:
+                #从雪球下载的时候,会有非200,但是并非下载失败的情况,这里特例一下
+                return response.text
+            else:
                 return None
-            return response.text
-        # response = urllib2.urlopen(url,timeout=10)
-
-        # if response.getcode() != 200:
-        #     return None
-
-        # 不好直接在这里设置编码,谁知道这个网页到底是什么编码呢
-        # return response.read()

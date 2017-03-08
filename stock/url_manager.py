@@ -16,7 +16,7 @@ class StockURLManager(SBURLManager):
         return (code,
                 'http://f10.eastmoney.com/f10_v2/CompanySurvey.aspx?code=' + joint_code(code, STOCK_INFO_NET),
                 'http://quote.eastmoney.com/' + joint_code(code, STOCK_INFO_NET) + '.html',
-                'https://xueqiu.com/v4/stock/quote.json?code=' + joint_code(code, STOCK_INFO_NET)
+                'https://xueqiu.com/v4/stock/quote.json?code=' + joint_code(code, STOCK_QUOTATION_NET)
                 )
 
     #行情url需要结合数据库,所以不能直接获得,如果是全量就获取a股开市日到今天的,如果是增量则获取起始日到今天的
@@ -27,6 +27,11 @@ class StockURLManager(SBURLManager):
     #     now = now_day().replace('-', '')
     #     return 'http://q.stock.sohu.com/hisHq?code=' + joint_code(code, STOCK_QUOTATION_NET) + '&start=' + initdate + '&end=' + now + '&stat=1&order=A&period=d&callback=historySearchHandler&rt=jsonp'
 
+    #返回基础和当日行情的url吧
+    def output_faileds(self):
+        for code in self.failed_urls:
+            print code, 'http://f10.eastmoney.com/f10_v2/CompanySurvey.aspx?code=' + joint_code(code, STOCK_INFO_NET),
+            'https://xueqiu.com/v4/stock/quote.json?code=' + joint_code(code, STOCK_QUOTATION_NET)
 
 if __name__ == "__main__":
     now = now_day()

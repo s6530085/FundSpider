@@ -50,8 +50,6 @@ class FundURLManager(SBURLManager):
         for url in self.failed_urls:
             print "http://fund.eastmoney.com/" + url + '.html'
 
-
-
     def _urlsfromcode(self, code):
         return ["http://fund.eastmoney.com/" + code + '.html',\
                 "http://fund.eastmoney.com/f10/jbgk_" + code + '.html',\
