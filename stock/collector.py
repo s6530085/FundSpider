@@ -4,7 +4,9 @@ import sqlite3
 import sys
 import datetime
 import xlrd
+import os
 from entity import StockInfo, StockQuotation
+from spider_base.convenient import safetofloat
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -144,13 +146,7 @@ class StockCollector(object):
         #建立了这个条目之后,就应该建立对应的表了,当然可能已经创建过了
         self._create_stock_quotation_table(stock_info.code)
 
-    #加载历史的行情,从excel中加载
-    def load_stock_history_quotation(self, stock_code):
-        #暂时还没处理好excel的文本
-        pass
-
-    #更新当天行情
-    def update_stock_quotation(self, code, stock_quotation):
+    def _update_stock_history_quotation(self, code, date, pe, pb):
         sql = u'INSERT OR REPLACE INTO {0} ({1}, {2}, {3}) '.format(
             self._stock_tablename(code),
             StockQuotation.DATE_KEY,
@@ -158,15 +154,81 @@ class StockCollector(object):
             StockQuotation.PB_KEY
         )
         sql += u'VALUES ("{0}", {1}, {2});'.format(
-            stock_quotation.date,
-            stock_quotation.pe_ttm,
-            stock_quotation.pb
+            date,
+            pe,
+            pb
         )
 
         self.db.execute(sql)
         self.db.commit()
 
+    #批量操作,差不多一个表批量一次吧,算是始终的程度
+    def _batch_update_stock_history_quotation(self, quotations):
+        for key in quotations.keys():
+            sql = u'INSERT OR REPLACE INTO {} VALUES (?, ?, ?);'.format(self._stock_tablename(key))
+            self.db.cursor().executemany(sql, quotations[key])
+            self.db.cursor().commit()
+
+
+    #加载历史的行情,从excel中加载,按照现有excel的结构,要读取一个股票的历史数据就得翻遍整个excel文件,但目前也没有太好的处理方法
+    #后来因为这个读取太好资源,改为一次性加载完毕得了,反复打开实在受不了
+    def load_stock_history_quotation(self, stock_codes):
+        #先创建个股的表哦
+        for stock_code in stock_codes:
+            self._create_stock_quotation_table(stock_code)
+
+        history_files = []
+        for root, _, files in os.walk('./stock_history'):
+            for f in files:
+                if f.startswith(u'历史行情'):
+                    history_files.append(f)
+        #最好反序一下,不然日期也是倒的
+        for history_file in history_files:
+            excel = xlrd.open_workbook(history_file)
+            #现在都是单表哦
+            sheet = excel.sheets()[0]
+            codes_line = sheet.row_values(2)
+            #也不过分批量,一个表做一次数据插入,怕太少会太卡,太多会崩溃
+            quotations = dict()
+            for col in range(1, sheet.ncols, 2):
+                code = sheet.cell(1, col).split('.')[0]
+                #有可能东方财富和choice的code不一致
+                ss = []
+                if code in stock_codes:
+                    for row in (4, sheet.nrows-2):
+                        #如果没有数值,则不添加哦
+                        pb = sheet.cell(row, col)
+                        pe = sheet.cell(row, col+1)
+                        date = sheet.cell(row, 1)
+                        if len(pb) == 0:
+                            break
+                        else:
+                            ss.append(date, safetofloat(pe), safetofloat(pb))
+                else:
+                    print 'code ' + code + " not in east"
+                if len(ss) > 0:
+                    quotations[code] = ss
+            self._batch_update_stock_history_quotation(quotations)
+
+
+    #更新当天行情
+    def update_stock_quotation(self, code, stock_quotation):
+        self._update_stock_history_quotation(code, stock_quotation.date, stock_quotation.pe_ttm, stock_quotation.pb)
+
 
 if __name__ == "__main__":
-    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print '2017-02-15' < '2017-01-15'
+    # c = StockCollector()
+    # c.load_stock_history_quotation(['000001', '000002'])
+    path = '/Users/gongpingjiananjing/Downloads/2/'
+    for root, _, files in os.walk(path):
+        for f in files:
+            if f.startswith(u'历史行情'):
+                num = f.split('行情')[1]
+                num = num.split('.')[0]
+                newnum = num
+                if len(num) == 1:
+                    newnum = '00' + num
+                elif len(num) == 2:
+                    newnum = '0' + num
+                nf = f.replace(num, newnum)
+                os.rename(root + f, root + nf)

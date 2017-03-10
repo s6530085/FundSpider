@@ -26,11 +26,14 @@ class StockMain(object):
         stock_home = self.downloader.download(homeurl)
         stocks = self.parser.parse_home(stock_home)
         # stocks = [('000621', 'aaa')]
-        for (code, _) in stocks:
+        for code in stocks:
             self.url_manager.add_url(code)
         stock_count = len(stocks)
         finish_count = [0]
         print '共需处理股票行情{}个'.format(stock_count)
+
+        #因为数据的原因,历史记录改为提前加载
+        self.collector.load_stock_history_quotation(stocks)
 
         def _inner_craw(isretry=False):
             if isretry:
