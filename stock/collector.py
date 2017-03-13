@@ -167,7 +167,7 @@ class StockCollector(object):
         for key in quotations.keys():
             sql = u'INSERT OR REPLACE INTO {} VALUES (?, ?, ?);'.format(self._stock_tablename(key))
             self.db.cursor().executemany(sql, quotations[key])
-            self.db.cursor().commit()
+            self.db.commit()
 
 
     #加载历史的行情,从excel中加载,按照现有excel的结构,要读取一个股票的历史数据就得翻遍整个excel文件,但目前也没有太好的处理方法
@@ -178,37 +178,49 @@ class StockCollector(object):
             self._create_stock_quotation_table(stock_code)
 
         history_files = []
-        for root, _, files in os.walk('./stock_history'):
+        for root, _, files in os.walk('./stock_history/'):
             for f in files:
                 if f.startswith(u'历史行情'):
-                    history_files.append(f)
+                    history_files.append(root + f)
         #最好反序一下,不然日期也是倒的
+        history_files.reverse()
         for history_file in history_files:
             excel = xlrd.open_workbook(history_file)
             #现在都是单表哦
             sheet = excel.sheets()[0]
-            codes_line = sheet.row_values(2)
+            # codes_line = sheet.row_values(2)
             #也不过分批量,一个表做一次数据插入,怕太少会太卡,太多会崩溃
             quotations = dict()
             for col in range(1, sheet.ncols, 2):
-                code = sheet.cell(1, col).split('.')[0]
+                code = sheet.cell(1, col).value.split('.')[0]
                 #有可能东方财富和choice的code不一致
                 ss = []
                 if code in stock_codes:
-                    for row in (4, sheet.nrows-2):
+                    #我为什么要反过来插?因为有些数据可能是1号,2号还没有,3号有了,此时我必须一个个读下去,读到有位置,太浪费资源了,但如果
+                    #我反过来读,最新的一天都没有,当然全都没有啦,而且日期是date型数据,排序什么的无所谓
+                    for row in (sheet.nrows-3, 3, -1):
                         #如果没有数值,则不添加哦
-                        pb = sheet.cell(row, col)
-                        pe = sheet.cell(row, col+1)
-                        date = sheet.cell(row, 1)
-                        if len(pb) == 0:
+                        date_data = sheet.cell(row, 0).value
+                        if isinstance(date_data, basestring) and len(date_data) == 0:
+                            break
+                        date_tuple = xlrd.xldate_as_tuple(date_data, 0)
+                        date = '{}-{:0>2}-{:0>2}'.format(date_tuple[0], date_tuple[1], date_tuple[2])
+                        pb = sheet.cell(row, col).value
+                        pe = sheet.cell(row, col+1).value
+                        #pb,pe如果有,那么是浮点型,此时不能用数值判断,因为完全可能不盈利,但如果没有,则是空字符串
+                        #不管数据时正还是负,是否过于夸张比如上百倍的市盈率,都先存起来,到底怎么处理由output确定
+                        if (isinstance(pb, basestring) and len(pb) == 0) or (isinstance(pe, basestring) and len(pe) == 0):
                             break
                         else:
-                            ss.append(date, safetofloat(pe), safetofloat(pb))
+                            date_tuple = xlrd.xldate_as_tuple(date_data, 0)
+                            date = '{}-{:0>2}-{:0>2}'.format(date_tuple[0], date_tuple[1], date_tuple[2])
+                            ss.append((date, safetofloat(pe), safetofloat(pb)))
                 else:
-                    print 'code ' + code + " not in east"
+                    print 'code ' + code + " not in eastmoney"
                 if len(ss) > 0:
                     quotations[code] = ss
             self._batch_update_stock_history_quotation(quotations)
+            print 'load history file finish ' + history_file
 
 
     #更新当天行情
@@ -219,16 +231,33 @@ class StockCollector(object):
 if __name__ == "__main__":
     # c = StockCollector()
     # c.load_stock_history_quotation(['000001', '000002'])
-    path = '/Users/gongpingjiananjing/Downloads/2/'
-    for root, _, files in os.walk(path):
-        for f in files:
-            if f.startswith(u'历史行情'):
-                num = f.split('行情')[1]
-                num = num.split('.')[0]
-                newnum = num
-                if len(num) == 1:
-                    newnum = '00' + num
-                elif len(num) == 2:
-                    newnum = '0' + num
-                nf = f.replace(num, newnum)
-                os.rename(root + f, root + nf)
+    path = './stock_history/历史行情151.xls'
+    excel = xlrd.open_workbook(path)
+    sheet = excel.sheets()[0]
+    quotations = dict()
+    for col in range(1, sheet.ncols, 2):
+        code = sheet.cell(1, col).value.split('.')[0]
+        #有可能东方财富和choice的code不一致
+        ss = []
+        if code not in [123]:
+             for row in range(4, sheet.nrows-2):
+                #如果没有数值,则不添加哦
+                pb = sheet.cell(row, col).value
+                pe = sheet.cell(row, col+1).value
+                date_data = sheet.cell(row, 0).value
+                if isinstance(date_data, basestring) and len(date_data) == 0:
+                    break
+                date_tuple = xlrd.xldate_as_tuple(date_data, 0)
+                date = '{}-{:0>2}-{:0>2}'.format(date_tuple[0], date_tuple[1], date_tuple[2])
+                #pb,pe如果有,那么是浮点型,此时不能用数值判断,因为完全可能不盈利,但如果没有,则是空字符串
+                #不管数据时正还是负,是否过于夸张比如上百倍的市盈率,都先存起来,到底怎么处理由output确定
+                #懒得管只有pb或者只有pe的情况了
+                if (isinstance(pb, basestring) and len(pb) == 0) or (isinstance(pe, basestring) and len(pe) == 0):
+                    break
+                else:
+                    ss.append((date, safetofloat(pe), safetofloat(pb)))
+        else:
+            print 'code ' + code + " not in eastmoney"
+        if len(ss) > 0:
+            quotations[code] = ss
+    print quotations

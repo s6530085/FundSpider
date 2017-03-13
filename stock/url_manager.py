@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 __author__ = 'study_sun'
 from spider_base import SBURLManager
-import sys
-from spider_base.convenient import now_day
 from convenient import *
 
 reload(sys)
