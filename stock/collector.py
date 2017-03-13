@@ -198,7 +198,7 @@ class StockCollector(object):
                 if code in stock_codes:
                     #我为什么要反过来插?因为有些数据可能是1号,2号还没有,3号有了,此时我必须一个个读下去,读到有位置,太浪费资源了,但如果
                     #我反过来读,最新的一天都没有,当然全都没有啦,而且日期是date型数据,排序什么的无所谓
-                    for row in (sheet.nrows-3, 3, -1):
+                    for row in range(sheet.nrows-3, 3, -1):
                         #如果没有数值,则不添加哦
                         date_data = sheet.cell(row, 0).value
                         if isinstance(date_data, basestring) and len(date_data) == 0:
@@ -231,7 +231,7 @@ class StockCollector(object):
 if __name__ == "__main__":
     # c = StockCollector()
     # c.load_stock_history_quotation(['000001', '000002'])
-    path = './stock_history/历史行情151.xls'
+    path = './stock_history/历史行情001.xls'
     excel = xlrd.open_workbook(path)
     sheet = excel.sheets()[0]
     quotations = dict()
@@ -240,7 +240,7 @@ if __name__ == "__main__":
         #有可能东方财富和choice的code不一致
         ss = []
         if code not in [123]:
-             for row in range(4, sheet.nrows-2):
+             for row in range(sheet.nrows-3, 3, -1):
                 #如果没有数值,则不添加哦
                 pb = sheet.cell(row, col).value
                 pe = sheet.cell(row, col+1).value
