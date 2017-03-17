@@ -12,13 +12,14 @@ sys.setdefaultencoding('utf-8')
 
 class StockCollector(object):
 
-    DB_NAME = 'Stock.db'
+    DATABASE_NAME = 'Stock.db'
     MAIN_TABLE_NAME = 'stock_list'
     #A股的最早上市时间,没有记录的统统按这个算
     STOCK_BEGIN_DATE = '1990-12-19'
 
     #因为不定,所以表名为stock_#code#
-    def _stock_tablename(self, code):
+    @classmethod
+    def _stock_tablename(cls, code):
         return 'stock_' + code
 
     def _create_stock_quotation_table(self, code):
@@ -29,7 +30,7 @@ class StockCollector(object):
         {} NUMBERIC NOT NULL
         );
         '''.format(
-            self._stock_tablename(code),
+            StockCollector._stock_tablename(code),
             StockQuotation.DATE_KEY,
             StockQuotation.PE_TTM_KEY,
             StockQuotation.PB_KEY
@@ -37,11 +38,11 @@ class StockCollector(object):
         self.db.execute(sql)
         self.db.execute('''
         CREATE UNIQUE INDEX IF NOT EXISTS fund_code ON {} ({});
-        '''.format(self._stock_tablename(code), StockQuotation.DATE_KEY))
+        '''.format(StockCollector._stock_tablename(code), StockQuotation.DATE_KEY))
 
 
     def __init__(self):
-        self.db = sqlite3.connect(StockCollector.DB_NAME)
+        self.db = sqlite3.connect(StockCollector.DATABASE_NAME)
         #stock分表,第一个是所有股票的列表,另外就是每股的每日行情了
         self._create_main_table()
         #全stock需要爬虫后才有哦
@@ -97,7 +98,7 @@ class StockCollector(object):
 
     #某只股票的行情最后更新时间,其实理论上每个最后更新时间应该都是一样的,
     def stock_last_update_date(self, code):
-        sql = 'SELECT {} FROM {} ORDER BY {} DESC LIMIT 1'.format(StockQuotation.DATE_KEY, self._stock_tablename(code), StockQuotation.DATE_KEY)
+        sql = 'SELECT {} FROM {} ORDER BY {} DESC LIMIT 1'.format(StockQuotation.DATE_KEY, StockCollector._stock_tablename(code), StockQuotation.DATE_KEY)
         #也有可能没有哦,没有的话就返回最大可能的期限
         result = self.db.execute(sql).fetchall()
         if len(result) == 0:
@@ -148,7 +149,7 @@ class StockCollector(object):
 
     def _update_stock_history_quotation(self, code, date, pe, pb):
         sql = u'INSERT OR REPLACE INTO {0} ({1}, {2}, {3}) '.format(
-            self._stock_tablename(code),
+            StockCollector._stock_tablename(code),
             StockQuotation.DATE_KEY,
             StockQuotation.PE_TTM_KEY,
             StockQuotation.PB_KEY
@@ -165,7 +166,7 @@ class StockCollector(object):
     #批量操作,差不多一个表批量一次吧,算是始终的程度
     def _batch_update_stock_history_quotation(self, quotations):
         for key in quotations.keys():
-            sql = u'INSERT OR REPLACE INTO {} VALUES (?, ?, ?);'.format(self._stock_tablename(key))
+            sql = u'INSERT OR REPLACE INTO {} VALUES (?, ?, ?);'.format(StockCollector._stock_tablename(key))
             self.db.cursor().executemany(sql, quotations[key])
             self.db.commit()
 
@@ -203,8 +204,6 @@ class StockCollector(object):
                         date_data = sheet.cell(row, 0).value
                         if isinstance(date_data, basestring) and len(date_data) == 0:
                             break
-                        date_tuple = xlrd.xldate_as_tuple(date_data, 0)
-                        date = '{}-{:0>2}-{:0>2}'.format(date_tuple[0], date_tuple[1], date_tuple[2])
                         pb = sheet.cell(row, col).value
                         pe = sheet.cell(row, col+1).value
                         #pb,pe如果有,那么是浮点型,此时不能用数值判断,因为完全可能不盈利,但如果没有,则是空字符串
@@ -227,37 +226,9 @@ class StockCollector(object):
     def update_stock_quotation(self, code, stock_quotation):
         self._update_stock_history_quotation(code, stock_quotation.date, stock_quotation.pe_ttm, stock_quotation.pb)
 
+    def __del__( self ):
+        if self.db != None:
+            self.db.close()
 
 if __name__ == "__main__":
-    # c = StockCollector()
-    # c.load_stock_history_quotation(['000001', '000002'])
-    path = './stock_history/历史行情001.xls'
-    excel = xlrd.open_workbook(path)
-    sheet = excel.sheets()[0]
-    quotations = dict()
-    for col in range(1, sheet.ncols, 2):
-        code = sheet.cell(1, col).value.split('.')[0]
-        #有可能东方财富和choice的code不一致
-        ss = []
-        if code not in [123]:
-             for row in range(sheet.nrows-3, 3, -1):
-                #如果没有数值,则不添加哦
-                pb = sheet.cell(row, col).value
-                pe = sheet.cell(row, col+1).value
-                date_data = sheet.cell(row, 0).value
-                if isinstance(date_data, basestring) and len(date_data) == 0:
-                    break
-                date_tuple = xlrd.xldate_as_tuple(date_data, 0)
-                date = '{}-{:0>2}-{:0>2}'.format(date_tuple[0], date_tuple[1], date_tuple[2])
-                #pb,pe如果有,那么是浮点型,此时不能用数值判断,因为完全可能不盈利,但如果没有,则是空字符串
-                #不管数据时正还是负,是否过于夸张比如上百倍的市盈率,都先存起来,到底怎么处理由output确定
-                #懒得管只有pb或者只有pe的情况了
-                if (isinstance(pb, basestring) and len(pb) == 0) or (isinstance(pe, basestring) and len(pe) == 0):
-                    break
-                else:
-                    ss.append((date, safetofloat(pe), safetofloat(pb)))
-        else:
-            print 'code ' + code + " not in eastmoney"
-        if len(ss) > 0:
-            quotations[code] = ss
-    print quotations
+    pass

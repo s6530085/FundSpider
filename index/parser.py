@@ -8,9 +8,10 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 
 class IndexParser(object):
-    pass
 
     def parse_index_list(self, index_list_content):
+        # 编码还是有问题哦
+        index_list_content = index_list_content.encode('ISO-8859-1').decode('utf-8')
         parsed_content = etree.HTML(index_list_content, parser=etree.HTMLParser(encoding='utf-8'))
         trs = parsed_content.xpath('//tbody/tr')
         indexs = []

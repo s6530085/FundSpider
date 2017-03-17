@@ -18,7 +18,7 @@ class StockParser(object):
         return code.startswith('60') or code.startswith('00') or code.startswith('30')
 
 
-    #解析全股票代码,返回形式是[(600000, 浦发银行)]
+    #解析全股票代码,返回形式是[600000,]
     def parse_home(self, content):
         #好气啊,又是源代码里写gb2312,实际要gbk才能解析的
         html = etree.HTML(content, parser=etree.HTMLParser(encoding='gbk'))
@@ -32,11 +32,6 @@ class StockParser(object):
                 code = i.split('(')[1][0:6]
                 if self._isstock(code):
                     stocks.append(code)
-                #     url = item.attribute('href')
-                #     #url形如http://quote.eastmoney.com/sh600009.html,而我们只需要其中的sh600009即可
-                #     url = url.split('/')[3].split('.')[0]
-                #     stocks.append((code, name, url))
-
         return stocks
 
     #解析单个股票的基础信息

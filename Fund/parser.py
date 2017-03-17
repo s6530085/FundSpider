@@ -15,7 +15,7 @@ class FundParser(object):
     def parse_home(self, home_content):
         if home_content is None:
             return None
-        home_content = home_content.decode('gbk')
+        home_content = home_content.encode('ISO-8859-1').decode('gbk')
         html = etree.HTML(home_content, parser=etree.HTMLParser(encoding='utf-8'))
         alinks = html.xpath('//a[@href]')
 

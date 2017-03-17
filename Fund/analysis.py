@@ -4,20 +4,13 @@ import sqlite3
 import sys
 import re
 from entity import FundInfo
+from spider_base.analysis import *
 reload(sys)
 sys.setdefaultencoding('utf-8')
+from collector import FundCollector
 
 #数据库的分析器,前提是数据库已经下载好了,所以先要运行main
-class FundAnalysis(object):
-
-    def __init__(self):
-        def regexp(expr, item):
-            reg = re.compile(expr)
-            return reg.search(item) is not None
-
-        self.db = sqlite3.connect('Fund.db')
-        #关于正则函数是看这里的 http://stackoverflow.com/questions/5365451/problem-with-regexp-python-and-sqlite
-        self.db.create_function("REGEXP", 2, regexp)
+class FundAnalysis(SBAnalysis):
 
     #code和name都是只对相应值进行检索
     def querycode(self, code, order='', isasc=True):
@@ -59,9 +52,6 @@ class FundAnalysis(object):
             results.append(f)
         return results
 
-    def rawquery(self, sql):
-        return self.db.cursor().execute(sql)
-
     #这个以stocks里最多出现的基金为准
     def querystocks(self, stocks, cap=10):
         all = self.db.cursor().execute('select * from fundinfo')
@@ -76,10 +66,6 @@ class FundAnalysis(object):
         results.sort(lambda x,y: y.inter-x.inter)
         return results[0:cap]
 
-    def __del__( self ):
-        if self.db != None:
-            self.db.close()
-
 def printfunds(funds, simplify=True):
     print 'funds count is ' + str(len(funds))
     for fund in funds:
@@ -90,5 +76,5 @@ def printfunds(funds, simplify=True):
 
 
 if __name__ == "__main__":
-    a = FundAnalysis()
-    printfunds(a.querytrack('中证500'))
+    a = FundAnalysis(FundCollector.DATABASE_NAME)
+    printfunds(a.querykeyword('信息红利'))

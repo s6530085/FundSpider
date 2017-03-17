@@ -33,7 +33,9 @@ class StockMain(object):
         print '共需处理股票行情{}个'.format(stock_count)
 
         #因为数据的原因,历史记录改为提前加载
-        self.collector.load_stock_history_quotation(stocks)
+        if not incremental:
+            self.collector.load_stock_history_quotation(stocks)
+            print 'load history finish'
 
         def _inner_craw(isretry=False):
             if isretry:
@@ -43,7 +45,7 @@ class StockMain(object):
                 (code, url, infourl, quotation_url) = self.url_manager.pop_url()
                 print 'start parst stock ' + code
                 try:
-                    #股票基本信息几乎不会更新,只有强制更新或没有的时候再刷吧
+                    # 股票基本信息几乎不会更新,只有强制更新或没有的时候再刷吧
                     if not incremental or not self.collector.is_stock_exists_in_main(code):
                         stock_content = self.downloader.download(url)
                         if stock_content is None or len(stock_content) == 0:
@@ -55,12 +57,12 @@ class StockMain(object):
                         stock_info.url = infourl
                         self.collector.update_stock_info(stock_info)
 
-                    #全量是从本地文件里先转为数据库数据,然后再尝试获取最新一天的数据,增量只能获得最近一天的数据
-                    #为什么这么做是数据使然,可靠的历史数据并不能从网络上爬虫获得,而是在各种专业的收费软件中导出,所以就是全量的时候先从历史文件
+                    # 全量是从本地文件里先转为数据库数据,然后再尝试获取最新一天的数据,增量只能获得最近一天的数据
+                    # 为什么这么做是数据使然,可靠的历史数据并不能从网络上爬虫获得,而是在各种专业的收费软件中导出,所以就是全量的时候先从历史文件
                     #中加载历史数据,之后和增量一致从网络中爬取最新一天的数据
                     if not incremental:
                         self.collector.load_stock_history_quotation(code)
-                    #看看今天是否需要有行情哦,有几种可能,比如今天不开市,不过更可能的是在重试流程里,本日本股行情已经爬过了,没必要再爬
+                    # 看看今天是否需要有行情哦,有几种可能,比如今天不开市,不过更可能的是在重试流程里,本日本股行情已经爬过了,没必要再爬
                     if self.collector.is_stock_need_update_quotation(code):
                         quotation_content = self.downloader.download(quotation_url)
                         if quotation_content is None or len(quotation_content) == 0:
@@ -79,11 +81,11 @@ class StockMain(object):
         _inner_craw(True)
         _inner_craw(True)
 
-        print 'success stock count is ' + finish_count[0]
+        print 'success stock count is ' + str(finish_count[0])
         print 'failed stock is'
         self.url_manager.output_faileds()
 
 
 if __name__ == "__main__":
     sk = StockMain()
-    sk.craw(incremental=False)
+    sk.craw(incremental=True)

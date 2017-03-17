@@ -20,7 +20,6 @@ def safetofloat(s, df=0.0):
 def sbtrip(s):
     pass
 
-
 def testhehe():
     print 'hehe'
 

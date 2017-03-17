@@ -6,5 +6,5 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-class IndexDownload(SBDownloader):
+class IndexDownloader(SBDownloader):
     pass
