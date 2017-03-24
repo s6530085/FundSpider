@@ -85,15 +85,17 @@ class IndexCollector(object):
                 IndexInfo.BEGIN_TIME_KEY,
                 IndexInfo.WEAVE_KEY
             )
-            sql += u'VALUES ("{0}", "{1}", "{2}", "{3}", {4}, "{5}");'.format(
-                index_info.code,
-                index_info.full_code,
-                index_info.name,
-                index_info.short_name,
-                index_info.begin_time,
-                index_info.weave
-            )
-            self.db.execute(sql)
+            # sql += u'VALUES ("{0}", "{1}", "{2}", "{3}", {4}, "{5}");'.format(
+            #     index_info.code,
+            #     index_info.full_code,
+            #     index_info.name,
+            #     index_info.short_name,
+            #     index_info.begin_time,
+            #     index_info.weave
+            # )
+            # self.db.execute(sql)
+            sql += u'VALUES (?, ?, ?, ?, ?, ?);'
+            self.db.execute(sql, (index_info.code, index_info.full_code, index_info.name, index_info.short_name, index_info.begin_time, index_info.weave))
             self.db.commit()
             # self._create_constituent_table(index_info.code)
 

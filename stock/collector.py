@@ -224,7 +224,7 @@ class StockCollector(object):
 
     #更新当天行情
     def update_stock_quotation(self, code, stock_quotation):
-        self._update_stock_history_quotation(code, stock_quotation.date, stock_quotation.pe_ttm, stock_quotation.pb)
+        self._update_stock_history_quotation(code, stock_quotation.s_date, stock_quotation.pe_ttm, stock_quotation.pb)
 
     def __del__( self ):
         if self.db != None:

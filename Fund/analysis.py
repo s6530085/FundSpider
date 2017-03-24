@@ -77,4 +77,4 @@ def printfunds(funds, simplify=True):
 
 if __name__ == "__main__":
     a = FundAnalysis(FundCollector.DATABASE_NAME)
-    printfunds(a.querykeyword('信息红利'))
+    printfunds(a.querykeyword('中小医疗'))

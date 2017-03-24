@@ -45,7 +45,7 @@ class StockQuotation(SBObject):
                 ]
 
     def __init__(self):
-        self.date = u''
+        self.s_date = u''
         self.pe_ttm = 0.0
         self.pb = 0.0
         # self.pe = 0.0
@@ -55,7 +55,7 @@ class StockQuotation(SBObject):
 
 
     def parse_sqlresult(self, sqlresult):
-        self.date = sqlresult[0]
+        self.s_date = sqlresult[0]
         self.pe_ttm = sqlresult[1]
         self.pb = sqlresult[2]
         # self.pe = sqlresult[3]
@@ -63,7 +63,7 @@ class StockQuotation(SBObject):
 
     #简单的就只打印日期,pe和pb
     def short_desc(self):
-        return u'{}: {} {}: {} {}: {} '.format(StockQuotation.DATE, self.date, StockQuotation.PE_TTM_CHINESE_KEY, self.pe_ttm, StockQuotation.PB_CHINENE_KEY, self.pb)
+        return u'{}: {} {}: {} {}: {} '.format(StockQuotation.DATE_CHINESE_KEY, self.date, StockQuotation.PE_TTM_CHINESE_KEY, self.pe_ttm, StockQuotation.PB_CHINENE_KEY, self.pb)
 
 
 class StockInfo(SBObject):

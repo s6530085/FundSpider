@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'study_sun'
 
-__all__ = ["safetofloat", "now_day"]
+__all__ = ["safetofloat", "now_day", "print_container"]
 
 import sys
 import datetime
@@ -27,6 +27,9 @@ def testhehe():
 def now_day():
     return datetime.datetime.now().strftime('%Y-%m-%d')
 
+def print_container(container):
+    for item in container:
+        print item
 
 if __name__ == "__main__":
     print safetofloat('123')

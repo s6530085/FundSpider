@@ -19,7 +19,7 @@ class IndexMain(object):
         self.analysis = IndexAnalysis()
 
     #这个基本上不会重试放心啦
-    def craw(self, incremental=True):
+    def crawl(self, incremental=True):
         #先获取指数列表,指数一般不会变,所以只有全量的时候才刷
         if not incremental:
             index_list_url = 'https://www.joinquant.com/data/dict/indexData'
@@ -35,6 +35,7 @@ class IndexMain(object):
             #然后开始加载指数的成分股变化,同样也是全量的时候才刷哦
             # self.collector.load_index_constituent()
 
+
     #具体的分析交由具体分析,main里做的事情是输出固定的指数pepb估值百分比
     def output_standard_index(self, stock_main):
         #先来个输出医药100的嘻嘻
@@ -46,11 +47,13 @@ class IndexMain(object):
 
 if __name__ == '__main__':
     #指数是建立在个股基础上的,所以要先获取个股信息
+    # stock_incremental = True
     # sm = StockMain()
-    # sm.craw(True)
+    # sm.craw(stock_incremental)
 
+    index_incremental = False
     im = IndexMain()
-    im.craw(False)
+    im.crawl(index_incremental)
     # im.output_standard_index()
 
 

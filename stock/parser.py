@@ -60,9 +60,9 @@ class StockParser(object):
                 stock.industry = value
             elif key == StockInfo.AREA_CHINESE_KEY:
                 stock.area = value
+            # 很奇怪,东方财富是不是网站出问题了,很多退市的公司基础信息都没了,
             elif key == StockInfo.RELEASE_DATE_CHINESE_KEY:
                 stock.releasedate = value
-
         return stock
 
     TODAY_DATE = ''
@@ -81,7 +81,7 @@ class StockParser(object):
             quotation_info.closing_price = 0.0
             quotation_info.yield_rate = 0.0
             if len(StockParser.TODAY_DATE) == 0:
-                quotation_info.date = datetime.datetime.now().strftime("%Y-%m-%d")
+                quotation_info.s_date = datetime.datetime.now().strftime("%Y-%m-%d")
         else:
             quotation_info.pe_ttm = safetofloat(quotation['pe_ttm'])
             quotation_info.pb = safetofloat(quotation['pb'])
@@ -92,7 +92,7 @@ class StockParser(object):
             #time的格式很怪,形如"time": "Wed Mar 08 14:59:50 +0800 2017",
             if len(StockParser.TODAY_DATE) == 0:
                 StockParser.TODAY_DATE = datetime.datetime.strptime(quotation['time'], '%a %b %d %X +0800 %Y').strftime("%Y-%m-%d")
-            quotation_info.date = StockParser.TODAY_DATE
+            quotation_info.s_date = StockParser.TODAY_DATE
         return quotation_info
 
 

@@ -14,7 +14,7 @@ class FundMain(object):
         self.collector = FundCollector()
 
     #先定接口，再做实现，其中首页特殊处理一下,基金三个月才出一次一次季报,如果不是数据结构改了大部分时间没必要全量更新
-    def craw(self, homeurl, incremental=True):
+    def crawl(self, homeurl, incremental=True):
         # 先处理首页
         home_content = self.html_downloader.download(homeurl)
         if home_content is None:
@@ -37,7 +37,7 @@ class FundMain(object):
         # self.url_manager.add_url("004131")
         print '共需爬取基金详情 ' + str(count) + " 个"
 
-        def inner_craw(isretry=False):
+        def inner_crawl(isretry=False):
             if isretry:
                 self.url_manager.transfer_url()
 
@@ -69,9 +69,9 @@ class FundMain(object):
                     self.url_manager.fail_url(fundcode)
 
         #尝试重试两次吧,因为第一时间就重试其实很可能还是出错
-        inner_craw()
-        inner_craw(True)
-        inner_craw(True)
+        inner_crawl()
+        inner_crawl(True)
+        inner_crawl(True)
 
         print 'success finish parse url sum ' + str(finished_count[0])
         print 'failed urls is'
@@ -80,4 +80,4 @@ class FundMain(object):
 
 if __name__ == "__main__":
     icMain = FundMain()
-    icMain.craw('http://fund.eastmoney.com/allfund.html')
+    icMain.crawl('http://fund.eastmoney.com/allfund.html')

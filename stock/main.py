@@ -19,13 +19,13 @@ class StockMain(object):
         self.parser = StockParser()
         self.collector = StockCollector()
 
-    def craw(self, incremental=True):
+    def crawl(self, incremental=True):
         homeurl = 'http://quote.eastmoney.com/stocklist.html'
         #除非指定全量更新,否则都是自动检查是否需要全量的
         #首页怎么都要来一次
         stock_home = self.downloader.download(homeurl)
         stocks = self.parser.parse_home(stock_home)
-        # stocks = [('000621', 'aaa')]
+        # stocks = ['000621']
         for code in stocks:
             self.url_manager.add_url(code)
         stock_count = len(stocks)
@@ -37,7 +37,7 @@ class StockMain(object):
             self.collector.load_stock_history_quotation(stocks)
             print 'load history finish'
 
-        def _inner_craw(isretry=False):
+        def _inner_crawl(isretry=False):
             if isretry:
                 self.url_manager.transfer_url()
 
@@ -46,6 +46,7 @@ class StockMain(object):
                 print 'start parst stock ' + code
                 try:
                     # 股票基本信息几乎不会更新,只有强制更新或没有的时候再刷吧
+                    # 目前发现很多退市的股票缺乏信息了,但也无关大雅,因为退市的自然没有最新行情了
                     if not incremental or not self.collector.is_stock_exists_in_main(code):
                         stock_content = self.downloader.download(url)
                         if stock_content is None or len(stock_content) == 0:
@@ -59,7 +60,7 @@ class StockMain(object):
 
                     # 全量是从本地文件里先转为数据库数据,然后再尝试获取最新一天的数据,增量只能获得最近一天的数据
                     # 为什么这么做是数据使然,可靠的历史数据并不能从网络上爬虫获得,而是在各种专业的收费软件中导出,所以就是全量的时候先从历史文件
-                    #中加载历史数据,之后和增量一致从网络中爬取最新一天的数据
+                    # 中加载历史数据,之后和增量一致从网络中爬取最新一天的数据
                     if not incremental:
                         self.collector.load_stock_history_quotation(code)
                     # 看看今天是否需要有行情哦,有几种可能,比如今天不开市,不过更可能的是在重试流程里,本日本股行情已经爬过了,没必要再爬
@@ -69,17 +70,20 @@ class StockMain(object):
                             print 'download stock quotation ' + quotation_url + ' failed'
                             self.url_manager.fail_url(code)
                             continue
+
                         quotation_info = self.parser.parse_quotation(quotation_content)
-                        self.collector.update_stock_quotation(code, quotation_info)
                         finish_count[0] += 1
+                        # 已经退市的就没必要更新了
+                        if len(quotation_info.s_date) > 0:
+                            self.collector.update_stock_quotation(code, quotation_info)
                         print 'finish stock ' + code + " quotation parse " + str(finish_count[0]) + ' / ' + str(stock_count)
                 except Exception as e:
                     print 'parse stock ' + code + ' fail, cause ' + str(e)
                     self.url_manager.fail_url(code)
 
-        _inner_craw()
-        _inner_craw(True)
-        _inner_craw(True)
+        _inner_crawl()
+        _inner_crawl(True)
+        _inner_crawl(True)
 
         print 'success stock count is ' + str(finish_count[0])
         print 'failed stock is'
@@ -88,4 +92,4 @@ class StockMain(object):
 
 if __name__ == "__main__":
     sk = StockMain()
-    sk.craw(incremental=True)
+    sk.crawl(incremental=True)
