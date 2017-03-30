@@ -8,6 +8,7 @@ from stock.analysis import *
 from collector import *
 from spider_base.convenient import now_day
 import datetime
+import os
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -16,7 +17,8 @@ sys.setdefaultencoding('utf-8')
 class IndexAnalysis(SBAnalysis):
 
     def __init__(self, db_name=IndexCollector.DATABASE_NAME):
-        self.stock_analysis = StockAnalysis()
+        # 有点很烦的
+        self.stock_analysis = StockAnalysis('..'+os.sep+'stock'+os.sep+StockCollector.DATABASE_NAME)
         super(IndexAnalysis, self).__init__(db_name)
 
     # 虽然指数有启用日期,但是数据未必可以,所以获得的是实际有数据的起始日
@@ -24,7 +26,7 @@ class IndexAnalysis(SBAnalysis):
         result = self.db.execute('SELECT MIN({}) FROM {};'.format(IndexConstituent.DATE_KEY, IndexCollector._constituent_tablename(index))).fetchone()[0]
         return result
 
-    # 明确要某一天某指数的成分股,不过如果当天没有成立指数那只能没有了
+    # 明确要某一天某指数的成分股,不过如果当天还没有成立指数那自然也没有了
     def query_index_constituents_at_date(self, index, date=''):
         # 如果没写就取当天的
         if date == '':
@@ -35,37 +37,87 @@ class IndexAnalysis(SBAnalysis):
         return result
 
     # 获取一段时间内指数的成分股,这里有些疑问,首先是时间未必能全包含,比如请求的时间指数尚未开始,另外就是不可能返回每天的数据
-    # 所以返回的数据和成分股变化,当然如果你非要,我也可以给你返回每天的数据,不过begin不能超过起始日就是了
+    # 所以返回的数据是成分股变化,当然如果你非要,我也可以给你返回每天的数据,不过begin不能超过起始日就是了
+    # 数据结构为[(change_date, constitunes), ],而包含的范围应该是begin_date<=real_begin<=real_end<=end_date
+    # 最后一个需要注意的是,返回的第一条起始日期,不一定是传过来的日期
     def query_index_constituents_in_range(self, index, begin_date='', end_date=''):
+        # 如果开始日期本身就比指数的启用日期还早,那么就以启用日期开始
         index_begin_date = self._index_begin_date(index)
         if begin_date < index_begin_date:
             begin_date = index_begin_date
         if end_date == '':
             end_date = now_day()
-        sql = 'SELECT {date}, {constituents} FROM {table} WHERE {date} >= "{begin_date}" AND {date} <= "{end_date}";'.format(
-            date=IndexConstituent.DATE_KEY, constituents=IndexConstituent.CONSTITUENTS_KEY, begin_date=begin_date, end_date=end_date)
-        result = self.db.execute(sql).fetchall()
-        return result
+        # 实际开始时间应该要取到比开始日期小的最大的一个,然则我已经放弃使用一句sql获取
+        sql = 'SELECT {date}, {constituents} FROM {table} WHERE {date} <= "{end_date}";'.format(
+            date=IndexConstituent.DATE_KEY, constituents=IndexConstituent.CONSTITUENTS_KEY,table=IndexCollector._constituent_tablename(index), end_date=end_date)
+        raw_results = self.db.execute(sql).fetchall()
+        results = []
+        last = None
+        for raw_result in raw_results:
+            if begin_date == raw_result[0]:
+                last = None
+                results.append(raw_result)
+            elif begin_date < raw_result[0]:
+                # 这里有个问题,就是需要加上第一次大于前的那个(如果有的话),情况很简单,假设数据库里的数据是
+                # 2010-06-30, 2011-01-01, 2011-06-01 ,2012-01-01...
+                # 而你的开始日期设为2011-03-01,那还得获得2011-01-01的数据哦
+                if last != None:
+                    # 修改为实际开始的日期
+                    results.append((begin_date, last[1]))
+                    last = None
+                results.append(raw_result)
+            else:
+                last = raw_result
+        # sql = 'SELECT {date}, {constituents} FROM {table} WHERE {date} >= "{begin_date}" AND {date} <= "{end_date}";'.format(
+        #     date=IndexConstituent.DATE_KEY, constituents=IndexConstituent.CONSTITUENTS_KEY,table=IndexCollector._constituent_tablename(index), begin_date=begin_date, end_date=end_date)
+        # result = self.db.execute(sql).fetchall()
+        return results
 
     # 一般的对外使用接口,展示指数(一般是多个,比较方便对比)在指定日期内的估值走势和区间
-    # 最后返回的数据格式是[(指数信息, [指数成分股估值]),]
-    def query_indexs(self, indexs, begin_date='', end_date='', padding_policy=''):
+    # 最后返回的数据格式是[(指数信息, [index_quotation]),],index_quotation的结构为(date, [pes], [pbs])pe,pb都是原始数据
+    def query_indexs(self, indexs, begin_date='', end_date=''):
+        # 虽然对外的接口都处理了这个情况,但是我接口间还是需要用到的
+        if end_date == '':
+            end_date = now_day()
         indexs_info = self.query_indexs_info(indexs)
         result = []
         for index_info in indexs_info:
+            # 本身获取股票的历史行情是不一定要填起始日期的,但用于指数分析时成分股的begin_date不应超过指数的启用日期,不然无意义
+            # 懒得考虑结束时间比开始早或者结束时间比指数启动还早的情况了哦
+            real_begin_date = max(begin_date, index_info.begin_time)
+            if real_begin_date > end_date:
+                result.append((index_info, []))
+                continue
             # 先获取指数的成分股哦
             constituents = self.query_index_constituents_in_range(index_info.code, begin_date, end_date)
-            for constituent in constituents:
-                # 本身获取股票的历史行情是不一定要填起始日期的,但用于指数分析时成分股的begin_date不应超过指数的启用日期,不然无意义
-                # 懒得考虑结束时间比开始早或者结束时间比指数启动还早的情况了哦
-                real_begin_date = max(begin_date, index_info.begin_date)
-                if real_begin_date < end_date:
-                    result.append((index_info, []))
-                    continue
-                # 一个指数里的所有成分股都是等权的,当然说实话我也没有权重可以用撒
-                constituents_info = self.stock_analysis.query_pepb(constituent.code, real_begin_date, end_date)
-
-            pes = a.query_pe()
+            if len(constituents) == 0:
+                result.append((index_info, []))
+                continue
+            # 此时获取的数据其实很多是冗余的,大部分成分股并不会一次换光,还不如把每个成分股的数据都全范围取出来,再划分出有用的部分
+            all_stocks = set()
+            # 这里返回的是时间段+成分股,注意时间段都是成分股变化之时,包夹在开始和结束时间之内的
+            for constituent_info in constituents:
+                (_, constituent_stocks) = constituent_info
+                for stock in constituent_stocks.split(','):
+                    all_stocks.add(stock)
+            stocks_quotation = dict()
+            for stock in all_stocks:
+                # 这里获取的是全段行情,肯定有点冗余,但也比反复多次分段获取好点
+                quotation = self.stock_analysis.query_pepb(stock, real_begin_date, end_date)
+                stocks_quotation[stock] = quotation
+            # 这里放的元素是(date, pes, pbs)哦
+            index_quotations = []
+            for (index, constituent_info) in enumerate(constituents):
+                # 因为要获得时间的区间,不得不用到下标
+                (start_date, constituent_stocks) = constituent_info
+                next_date = end_date
+                if index < len(constituents) - 1:
+                    (next_date, _) = constituents[index+1]
+                # 有个没法处理的问题,就是我并不知道这段时间内有多少开盘日,只好随便用股票有数据作为开市依据了,但我也不知道股票数据是否完备
+                one_stock_quotations = stocks_quotation[constituent_stocks[0]]
+                for (s_date, pe, pb) in one_stock_quotations:
+                    if s_date >= start_date and s_date < end_date:
+                        pass
         return result
 
     #通过代码查,返回IndexInfo形式数组
@@ -95,5 +147,5 @@ class IndexAnalysis(SBAnalysis):
 
 if __name__ == '__main__':
     a = IndexAnalysis()
-    # a.query_indexs(['000016'])
-    print max('', '1922-10-22')
+    # a.query_indexs(['000016'], '2014-01-01')
+    print a.stock_analysis._query_stocks_pepb_at_date(['600000', '601766'], '2017-03-29')

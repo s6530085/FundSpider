@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 __author__ = 'study_sun'
-import sqlite3
-import sys
-import re
 from entity import FundInfo
 from spider_base.analysis import *
 reload(sys)
@@ -28,8 +25,8 @@ class FundAnalysis(SBAnalysis):
     #其他方法懒得扩展了,如果想要检索
     def querybycol(self, colname, colvalue, order='', isasc=True):
         sql = '''
-        select * from fundinfo where {} like "%{}%"
-        '''.format(colname, colvalue)
+        select * from {} where {} like "%{}%"
+        '''.format(FundCollector.DATABASE_TABLE_NAME, colname, colvalue)
         if len(order) > 0 :
             sql += ' order by {} {}'.format(order,  'asc' if isasc else 'desc')
         return self.query(sql)
@@ -77,4 +74,4 @@ def printfunds(funds, simplify=True):
 
 if __name__ == "__main__":
     a = FundAnalysis(FundCollector.DATABASE_NAME)
-    printfunds(a.querykeyword('中小医疗'))
+    printfunds(a.querykeyword('黄金'))

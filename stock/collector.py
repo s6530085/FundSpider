@@ -134,7 +134,7 @@ class StockCollector(object):
             stock_info.code,
             stock_info.shortname,
             stock_info.fullname,
-            u','.join(stock_info.usednames),
+            u','.join(stock_info.used_names),
             stock_info.market,
             stock_info.industry,
             stock_info.area,
@@ -231,4 +231,5 @@ class StockCollector(object):
             self.db.close()
 
 if __name__ == "__main__":
-    pass
+    a = StockInfo()
+    a.__setattr__()

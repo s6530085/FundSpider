@@ -49,7 +49,7 @@ class StockParser(object):
                 stock.fullname = value
             elif key == StockInfo.USED_NAME_CHINESE_KEY:
                 #可能没有哦
-                stock.usednames = value.split('->')
+                stock.used_names = value.split('->')
             elif key == StockInfo.CODE_CHINESE_KEY:
                 stock.code = value
             elif key == StockInfo.SHORT_NAME_CHINESE_KEY:

@@ -25,6 +25,10 @@ class StockDataOutputPolicy(Enum):
 #提供个股信息,纯数据输出,可以自己用也可以指数模块用
 class StockAnalysis(SBAnalysis):
 
+    def __init__(self, db_name=StockCollector.DATABASE_NAME):
+         super(StockAnalysis, self).__init__(db_name)
+
+
     # 查询单个股票的pe和pb,开始结束日期是[]的范围哦,如果不写就从最久到最新
     # 本来是想把处理抹平数据放函数里,输出数据放别的地方,后来发现处理数据也不能放函数里,不然中位数就不准了,故而本函数输出的都是原始数据
     def query_pepb(self, stock_code, begin_date='', end_date=''):
@@ -48,15 +52,45 @@ class StockAnalysis(SBAnalysis):
             results.append(quotation)
         return results
 
+    # 因为日期明确,所以返回也很简单,就是(pes,pbs)但也有可能当天并未开市,所以可能数据是空的
+    def _query_stocks_pepb_at_date(self, stocks, date):
+        pes = []
+        pbs = []
+        for stock in stocks:
+            sql = 'SELECT {pe}, {pb} FROM {table} WHERE {date_key} = "{date}";'.format(
+                pe=StockQuotation.PE_TTM_KEY, pb=StockQuotation.PB_KEY, table=StockCollector._stock_tablename(stock),date_key=StockQuotation.DATE_KEY, date=date
+            )
+            result = self.db.execute(sql).fetchone()
+            # 我大胆预测.有一个没有数据的话,肯定都没数据
+            if result == None:
+                break
+            pes.append(result[0])
+            pbs.append(result[1])
+        return (pes, pbs)
 
-    # 抹平数据
-    # pb一般不抹平,极少会有极大pb或者负pb的,所以就当全是pe啦嘻嘻
-    def _flat_data(self, quotations, policy=''):
-        pass
-
-
+    # 同样也是明确日期范围,不需要校验,但里面到底是不是天天有就不好说了,这里的时间区间是[),返回值形如[(date, [pes], [pbs]), ]
+    def _query_stocks_pepb_in_range(self, stocks, begin_date, end_date):
+        results = []
+        # 这个date比较麻烦了,先按照工作日一个个去尝试搜索,如果有就加上,没有就当做那天不开市
+        for stock in stocks:
+            sql = 'SELECT {date}, {pe}, {pb} FROM {table} WHERE {date} BETWEEN "{begin_date}" AND "{end_date}";'.format(
+                date=StockQuotation.DATE_KEY, pe=StockQuotation.PE_TTM_KEY, pb=StockQuotation.PB_KEY, table=StockCollector._stock_tablename(stock), begin_date=begin_date, end_date=end_date
+            )
+            result = self.db.execute(sql).fetchall()
+            if result != None:
+                for day_quotation in result:
+                    pass
+        return results
 
 
 if __name__ == "__main__":
-    a = StockAnalysis(StockCollector.DATABASE_NAME)
-    print_container(a.query_pepb('600000'))
+
+    av = [1,2,3]
+    print av[LAST_ELEMENT_INDEX]
+    aa = (1, [1,2,3])
+    print aa
+    aa[1].append(4)
+    print aa
+    a = StockAnalysis()
+    # print a._query_stocks_pepb_in_range(['600000', '601766'], '2017-01-01', '2017-01-10')
+    # print '{name} is {{aa'.format(name='xixi')
