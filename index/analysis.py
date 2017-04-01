@@ -7,7 +7,7 @@ import sys
 from stock.analysis import *
 from collector import *
 from spider_base.convenient import now_day
-import datetime
+from outputer import *
 import os
 
 reload(sys)
@@ -93,31 +93,17 @@ class IndexAnalysis(SBAnalysis):
             if len(constituents) == 0:
                 result.append((index_info, []))
                 continue
-            # 此时获取的数据其实很多是冗余的,大部分成分股并不会一次换光,还不如把每个成分股的数据都全范围取出来,再划分出有用的部分
-            all_stocks = set()
+            index_quotation = []
             # 这里返回的是时间段+成分股,注意时间段都是成分股变化之时,包夹在开始和结束时间之内的
-            for constituent_info in constituents:
-                (_, constituent_stocks) = constituent_info
-                for stock in constituent_stocks.split(','):
-                    all_stocks.add(stock)
-            stocks_quotation = dict()
-            for stock in all_stocks:
-                # 这里获取的是全段行情,肯定有点冗余,但也比反复多次分段获取好点
-                quotation = self.stock_analysis.query_pepb(stock, real_begin_date, end_date)
-                stocks_quotation[stock] = quotation
-            # 这里放的元素是(date, pes, pbs)哦
-            index_quotations = []
             for (index, constituent_info) in enumerate(constituents):
-                # 因为要获得时间的区间,不得不用到下标
-                (start_date, constituent_stocks) = constituent_info
-                next_date = end_date
+                (date, constituent_stocks) = constituent_info
                 if index < len(constituents) - 1:
                     (next_date, _) = constituents[index+1]
-                # 有个没法处理的问题,就是我并不知道这段时间内有多少开盘日,只好随便用股票有数据作为开市依据了,但我也不知道股票数据是否完备
-                one_stock_quotations = stocks_quotation[constituent_stocks[0]]
-                for (s_date, pe, pb) in one_stock_quotations:
-                    if s_date >= start_date and s_date < end_date:
-                        pass
+                else:
+                    next_date = end_date
+                quotations = self.stock_analysis.query_stocks_pepb_in_range(constituent_stocks.split(','), date, next_date)
+                index_quotation += quotations
+            result.append((index_info, index_quotation))
         return result
 
     #通过代码查,返回IndexInfo形式数组
@@ -147,5 +133,7 @@ class IndexAnalysis(SBAnalysis):
 
 if __name__ == '__main__':
     a = IndexAnalysis()
-    # a.query_indexs(['000016'], '2014-01-01')
-    print a.stock_analysis._query_stocks_pepb_at_date(['600000', '601766'], '2017-03-29')
+    index_quotation = a.query_indexs(['000016'], '2014-01-01')
+    o = IndexOutputer()
+    o.print_index_quotations(index_quotation)
+

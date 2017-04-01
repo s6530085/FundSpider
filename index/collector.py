@@ -8,6 +8,8 @@ sys.setdefaultencoding('utf-8')
 from entity import IndexInfo, IndexConstituent
 import os
 import xlrd
+from datetime import datetime
+from spider_base.convenient import *
 
 class IndexCollector(object):
 
@@ -85,15 +87,6 @@ class IndexCollector(object):
                 IndexInfo.BEGIN_TIME_KEY,
                 IndexInfo.WEAVE_KEY
             )
-            # sql += u'VALUES ("{0}", "{1}", "{2}", "{3}", {4}, "{5}");'.format(
-            #     index_info.code,
-            #     index_info.full_code,
-            #     index_info.name,
-            #     index_info.short_name,
-            #     index_info.begin_time,
-            #     index_info.weave
-            # )
-            # self.db.execute(sql)
             sql += u'VALUES (?, ?, ?, ?, ?, ?);'
             self.db.execute(sql, (index_info.code, index_info.full_code, index_info.name, index_info.short_name, index_info.begin_time, index_info.weave))
             self.db.commit()
@@ -109,8 +102,13 @@ class IndexCollector(object):
                 #文件名就是追踪的指数标号
                 file_name = f.split('.')[0]
                 if IndexCollector.ATTENTION_INDEXS.__contains__(file_name):
+                    print 'load index change ' + file_name
                     self._load_index_constituent(root+f, file_name)
 
+    # 指数的剔除和纳入不是同一天哦,暂时按超过10天算更迭了
+    def _in_index_change_range(self, current, last):
+        days = (datetime.strptime(current, STAND_DATE_FORMAT) - datetime.strptime(last, STAND_DATE_FORMAT)).days
+        return days > 10
 
     def _load_index_constituent(self, file_path, index_code):
         self._create_constituent_table(index_code)
@@ -119,13 +117,15 @@ class IndexCollector(object):
         current_date = ''
         current_constituent = []
         for row in range(1, sheet.nrows-6):
-            #喷了,这里的时间就是直接是字符串
+            # 喷了,结果这里的时间就是直接是字符串
             row_date = sheet.cell(row, 1).value
             #第1条先设置初始时间,以后每次时间不一致就算一次成分股变更
             if row == 1:
                 current_date = row_date
-            #除了日期更换,当然到了最后一行也要提交以下咯
-            if row_date != current_date or row == sheet.nrows-7:
+            # 除了日期更换,当然到了最后一行也要提交以下咯
+            # 很头疼,纳入和剔除不是同一天做的,经常是前一天先剔除老的,后一天再纳入新的,所以一定天数之前的变动都当作一次变动了
+            # if row_date != current_date or row == sheet.nrows-7:
+            if self._in_index_change_range(row_date, current_date) or row == sheet.nrows-7:
                 # sql = u'INSERT OR REPLACE INTO {} ({}, {}) VALUES ({}, "{}");'.format(
                 #     IndexCollector._constituent_tablename(index_code), IndexConstituent.DATE_KEY, IndexConstituent.CONSTITUENTS_KEY, current_date, ','.join(current_constituent))
                 # self.db.execute(sql)

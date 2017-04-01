@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'study_sun'
 
-__all__ = ["safetofloat", "now_day", "print_container", "next_day", "days_in_range", "LAST_ELEMENT_INDEX"]
+__all__ = ["safetofloat", "now_day", "print_container", "next_day", "days_in_range", "LAST_ELEMENT_INDEX", "STAND_DATE_FORMAT"]
 
 import sys
 from datetime import datetime, timedelta, date
@@ -29,7 +29,7 @@ def testhehe():
 
 # 返回2017-12-02这样的字符串
 def now_day(format=STAND_DATE_FORMAT):
-    return datetime.datetime.now().strftime(format)
+    return datetime.now().strftime(format)
 
 # 输入一个2017-01-01的字符串,返回一个2017-01-02的字符串
 def next_day(day, input_format=STAND_DATE_FORMAT, output_format=STAND_DATE_FORMAT):

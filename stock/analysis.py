@@ -6,28 +6,12 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 from collector import StockCollector
 from entity import StockQuotation, StockInfo
-from enum import Enum, unique
-@unique
-# 数据抹平策略:
-# 1.无视
-# 2.小于0的按0算
-# 3.小于0的抛弃
-# 4.过高的数据(pe>100)抛弃
-class StockDataFlatPolicy(Enum):
-    pass
-
-#数据输出策略,有些是必然的我先写明,比如1号,3号有数据,但2号数据缺失,此时2号的数据就按照(1+3)/2处理
-#1.统计结果是算数平均还是中位数
-@unique
-class StockDataOutputPolicy(Enum):
-    pass
 
 #提供个股信息,纯数据输出,可以自己用也可以指数模块用
 class StockAnalysis(SBAnalysis):
 
     def __init__(self, db_name=StockCollector.DATABASE_NAME):
          super(StockAnalysis, self).__init__(db_name)
-
 
     # 查询单个股票的pe和pb,开始结束日期是[]的范围哦,如果不写就从最久到最新
     # 本来是想把处理抹平数据放函数里,输出数据放别的地方,后来发现处理数据也不能放函数里,不然中位数就不准了,故而本函数输出的都是原始数据
@@ -53,7 +37,7 @@ class StockAnalysis(SBAnalysis):
         return results
 
     # 因为日期明确,所以返回也很简单,就是(pes,pbs)但也有可能当天并未开市,所以可能数据是空的
-    def _query_stocks_pepb_at_date(self, stocks, date):
+    def query_stocks_pepb_at_date(self, stocks, date):
         pes = []
         pbs = []
         for stock in stocks:
@@ -69,8 +53,10 @@ class StockAnalysis(SBAnalysis):
         return (pes, pbs)
 
     # 同样也是明确日期范围,不需要校验,但里面到底是不是天天有就不好说了,这里的时间区间是[),返回值形如[(date, [pes], [pbs]), ]
-    def _query_stocks_pepb_in_range(self, stocks, begin_date, end_date):
+    def query_stocks_pepb_in_range(self, stocks, begin_date, end_date):
         results = []
+        pe_dict = dict()
+        pb_dict = dict()
         # 这个date比较麻烦了,先按照工作日一个个去尝试搜索,如果有就加上,没有就当做那天不开市
         for stock in stocks:
             sql = 'SELECT {date}, {pe}, {pb} FROM {table} WHERE {date} BETWEEN "{begin_date}" AND "{end_date}";'.format(
@@ -78,19 +64,28 @@ class StockAnalysis(SBAnalysis):
             )
             result = self.db.execute(sql).fetchall()
             if result != None:
-                for day_quotation in result:
-                    pass
+                for (date, pe, pb) in result:
+                    if date in pe_dict:
+                        pes = pe_dict[date]
+                        pes.append(pe)
+                    else:
+                        pes = [pe]
+                        pe_dict[date] = pes
+                    if date in pb_dict:
+                        pbs = pb_dict[date]
+                        pbs.append(pb)
+                    else:
+                        pbs = [pb]
+                        pb_dict[date] = pbs
+        sorted_dates = sorted(pe_dict.keys())
+        for date in sorted_dates:
+            # 或许存在pe和pb日期不对应哦
+            results.append((date, pe_dict[date], pb_dict[date]))
         return results
 
 
 if __name__ == "__main__":
-
-    av = [1,2,3]
-    print av[LAST_ELEMENT_INDEX]
-    aa = (1, [1,2,3])
-    print aa
-    aa[1].append(4)
-    print aa
     a = StockAnalysis()
-    # print a._query_stocks_pepb_in_range(['600000', '601766'], '2017-01-01', '2017-01-10')
+    print a.query_stocks_pepb_in_range(['600000', '601766'], '2017-01-01', '2017-01-10')
+    print (1, 2, None)
     # print '{name} is {{aa'.format(name='xixi')

@@ -33,7 +33,7 @@ class IndexMain(object):
                 self.collector.update_indexs(index_list)
 
             #然后开始加载指数的成分股变化,同样也是全量的时候才刷哦
-            # self.collector.load_index_constituent()
+            self.collector.load_index_constituent()
 
 
     #具体的分析交由具体分析,main里做的事情是输出固定的指数pepb估值百分比
