@@ -13,6 +13,27 @@ class StockAnalysis(SBAnalysis):
     def __init__(self, db_name=StockCollector.DATABASE_NAME):
          super(StockAnalysis, self).__init__(db_name)
 
+    #这个只有一个哦
+    def querybycode(self, stock_code):
+        sql = 'SELECT * FROM {table_name} WHERE {code_key} = "{code}"'.format(
+            table_name=StockCollector.MAIN_TABLE_NAME,code_key=StockInfo.CODE_KEY,code=stock_code)
+        raw_result = self.db.execute(sql).fetchone()
+        stock_info = StockInfo()
+        stock_info.parse_sqlresult(raw_result)
+        return stock_info
+
+    # 这个返回的是数组,毕竟我可能回去搜索"中国xx"等股票呢不是吗嘻嘻,连全名,曾用名也一起搜索了啊嘻嘻
+    def querybyname(self, stock_name):
+        sql = 'SELECT * FROM {table_name} WHERE {name_key} LIKE "%{name}%" OR {usedname_key} LIKE "%{name}%" OR {fullname_key} LIKE "%{name}%"'.format(
+            table_name=StockCollector.MAIN_TABLE_NAME,name_key=StockInfo.SHORT_NAME_KEY,name=stock_name,usedname_key=StockInfo.USED_NAME_KEY,fullname_key=StockInfo.FULL_NAME_KEY)
+        raw_results = self.db.execute(sql).fetchall()
+        results = []
+        for raw_result in raw_results:
+            stock_info = StockInfo()
+            stock_info.parse_sqlresult(raw_result)
+            results.append(stock_info)
+        return results
+
     # 查询单个股票的pe和pb,开始结束日期是[]的范围哦,如果不写就从最久到最新
     # 本来是想把处理抹平数据放函数里,输出数据放别的地方,后来发现处理数据也不能放函数里,不然中位数就不准了,故而本函数输出的都是原始数据
     def query_pepb(self, stock_code, begin_date='', end_date=''):
@@ -83,9 +104,26 @@ class StockAnalysis(SBAnalysis):
             results.append((date, pe_dict[date], pb_dict[date]))
         return results
 
+    # 某些特殊需求,给你一串002211,223311翻译过来中文名,注意有个问题就是一旦你输入错号码,那么返回的结果数目就会对不上,而且我也不知道哪些是正确的
+    # 而且顺序也不对应,请调用者自重,下同
+    def translate_codes(self, codes):
+        sql = 'SELECT {short_name_key} FROM {table_name} WHERE {code_key} IN (%s)'.format(
+            short_name_key=StockInfo.SHORT_NAME_KEY, table_name=StockCollector.MAIN_TABLE_NAME,code_key=StockInfo.CODE_KEY) % ','.join('?' for code in codes)
+        results = self.db.execute(sql, codes).fetchall()
+        return [i[0] for i in results]
+
+    # 相反的,把名字改为code
+    def translate_names(self, names):
+        sql = 'SELECT {code_key} FROM {table_name} WHERE {short_name_key} IN (%s)'.format(
+            code_key=StockInfo.CODE_KEY, table_name=StockCollector.MAIN_TABLE_NAME,short_name_key=StockInfo.SHORT_NAME_KEY) % ','.join('?' for name in names)
+        results = self.db.execute(sql, names).fetchall()
+        return  [i[0] for i in results]
 
 if __name__ == "__main__":
     a = StockAnalysis()
-    print a.query_stocks_pepb_in_range(['600000', '601766'], '2017-01-01', '2017-01-10')
-    print (1, 2, None)
+    print_container(a.translate_codes(['600000', '000002']))
+    print a.translate_names([u'万科A', u'平安银行'])
+    # print a.query_stocks_pepb_in_range(['600000', '601766'], '2017-01-01', '2017-01-10')
+    # print (1, 2, None)
     # print '{name} is {{aa'.format(name='xixi')
+    # print_container(a.querybyname(''))

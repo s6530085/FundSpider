@@ -1,24 +1,23 @@
 # -*- coding: utf-8 -*-
 __author__ = 'study_sun'
 
-from spider_base.analysis import *
-from spider_base.convenient import *
-import sys
 from stock.analysis import *
 from collector import *
 from spider_base.convenient import now_day
 from outputer import *
+from fund.analysis import *
 import os
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-#这里主要还是输出纯数据,图表交由output搞定
+#这里主要还是输出纯原始数据,图表交由output搞定,所以直接用的话可能会有比较夸张的数据,比如市盈率超过一万这种
 class IndexAnalysis(SBAnalysis):
 
     def __init__(self, db_name=IndexCollector.DATABASE_NAME):
         # 有点很烦的
         self.stock_analysis = StockAnalysis('..'+os.sep+'stock'+os.sep+StockCollector.DATABASE_NAME)
+        self.fund_analysis = FundAnalysis('..'+os.sep+'fund'+os.sep+FundCollector.DATABASE_NAME)
         super(IndexAnalysis, self).__init__(db_name)
 
     # 虽然指数有启用日期,但是数据未必可以,所以获得的是实际有数据的起始日
@@ -76,6 +75,7 @@ class IndexAnalysis(SBAnalysis):
     # 一般的对外使用接口,展示指数(一般是多个,比较方便对比)在指定日期内的估值走势和区间
     # 最后返回的数据格式是[(指数信息, [index_quotation]),],index_quotation的结构为(date, [pes], [pbs])pe,pb都是原始数据
     def query_indexs(self, indexs, begin_date='', end_date=''):
+        indexs = to_container(indexs)
         # 虽然对外的接口都处理了这个情况,但是我接口间还是需要用到的
         if end_date == '':
             end_date = now_day()
@@ -108,6 +108,7 @@ class IndexAnalysis(SBAnalysis):
 
     #通过代码查,返回IndexInfo形式数组
     def query_indexs_info(self, indexs):
+        indexs = to_container(indexs)
         # 注意这里的sql
         sql = 'SELECT * FROM {table} WHERE {code} IN ({code_list});'.format(
             table=IndexCollector.DATABASE_TABLE_NAME, code=IndexInfo.CODE_KEY, code_list=', '.join('?' for _ in indexs))
@@ -130,10 +131,22 @@ class IndexAnalysis(SBAnalysis):
             infoes.append(info)
         return infoes
 
+    # 指数基金的持仓还好,很多主题基金的持仓和其主题完全不符,所以就有验证十大持仓是否是其主题指数的成分股
+    def query_stocks_in_constituents(self, fund_codes, index_code):
+        fund_codes = to_container(fund_codes)
+        _, constituents = self.query_index_constituents_at_date(index_code, now_day())
+        constituents = constituents.split(',')
+        print '指数'+index_code+"成分股共"+str(len(constituents))+'只'
+        for fund_code in fund_codes:
+            fund_info = self.fund_analysis.querycode(fund_code)[0]
+            stocks = self.stock_analysis.translate_names(fund_info.get_raw_stocks())
+            contain_count= len(list((set(stocks).union(set(constituents)))^(set(stocks)^set(constituents))))
+            print fund_info.shortname + str(len(stocks)) + '大持仓, ' + str(contain_count) + '在指数成分股中'
 
 if __name__ == '__main__':
     a = IndexAnalysis()
+    # print a.query_index_constituents_at_date('000827', now_day())
+    # a.query_stocks_in_constituents(['002259'], '000827')
     index_quotation = a.query_indexs(['000016'], '2014-01-01')
     o = IndexOutputer()
     o.print_index_quotations(index_quotation)
-

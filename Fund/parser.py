@@ -202,11 +202,17 @@ class FundParser(object):
         html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
         #只记录最新的一次持仓即可,老持仓暂时对我没有参考意义
         tbs = html.xpath('//table[@class="w782 comm tzxq"]')
+        # pers = html.xpath('//table[@class="w782 comm tzxq"]')
         if len(tbs) > 0:
             #懒得记录编号了,直接用名字
             stocktds = tbs[0].xpath('.//td[@class="tol"]/a')
-            for stocked in stocktds:
-                info.stocks.append(stocked.text)
+            pers = tbs[0].xpath('.//td[@class="tor"]')
+            for (index, stocked) in enumerate(stocktds):
+                # info.stocks.append(stocked.text)
+                # tor的太多了,我只需要其中第三个
+                per = pers[index*5+2]
+                # 懒得再做一个字段了,就用[国投电力-3.6%,川投能源-4.1%]这种形式了
+                info.stocks.append(stocked.text + '-' + per.text)
 
     def parse_annual(self, info, content):
         #需要小心的是,收益算年化,排名则是算术平均值,以及没有数值不能简单地以0替代,否则会有偏差

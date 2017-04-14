@@ -71,8 +71,7 @@ class FundInfo(SBObject):
     BIAS_KEY = u'bias'
     BIAS_CHINESE_KEY = u'跟踪误差'
 
-    #十大持仓,懒得写也是和经理人一样用逗号分割了,而且如果有半年/年报的话,最多是20大持仓
-
+    #十大持仓,懒得写也是和经理人一样用逗号分割了,而且如果有半年/年报的话,最多是20大持仓,有些地方又未必有十大,所以不要预设长度
     STOCKS_KEY = u'stocks'
     STOCKS_CHINESE_KEY = u'股票投资明细'
 
@@ -168,3 +167,9 @@ class FundInfo(SBObject):
         self.style = sqlresult[20]
         self.fee = sqlresult[21]
 
+    # 现在的stocks 是 [华中科技-3.5%,]的形式,提供个纯粹名字数组的方法吧
+    def get_raw_stocks(self):
+        raw_stocks = []
+        for stock in self.stocks:
+            raw_stocks.append(stock.split('-')[0])
+        return raw_stocks

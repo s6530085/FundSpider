@@ -2,12 +2,19 @@
 __author__ = 'study_sun'
 from entity import FundInfo
 from spider_base.analysis import *
+from spider_base.convenient import *
 reload(sys)
 sys.setdefaultencoding('utf-8')
 from collector import FundCollector
+import os
 
 #数据库的分析器,前提是数据库已经下载好了,所以先要运行main
 class FundAnalysis(SBAnalysis):
+
+    def __init__(self, db_name=FundCollector.DATABASE_NAME):
+        # 有点很烦的
+        # self.stock_analysis = FundAnalysis('..'+os.sep+'stock'+os.sep+StockCollector.DATABASE_NAME)
+        super(FundAnalysis, self).__init__(db_name)
 
     #code和name都是只对相应值进行检索
     def querycode(self, code, order='', isasc=True):
@@ -49,8 +56,11 @@ class FundAnalysis(SBAnalysis):
             results.append(f)
         return results
 
-    #这个以stocks里最多出现的基金为准
-    def querystocks(self, stocks, cap=10):
+    # 现在增加了持股比例,所以是传递的票综合起来最多的排前面,但无法处理那种你关注两个票a,b,其中A基金有9%的a,1%的b,B基金有1%的a,10%的b
+    # 他们的排名会B会在A前的,可a其实涨了10%,而b涨了2%,实际上我希望是A在前面才好,这只能要么加权重,要么自己看了
+    # 传递参数和权重主要是为了套利,但是基金三个月才出一次季报,鬼知道是不是已经换股了,只能说是投资有风险了
+    # weight要么不传,要传就要统一口径,建议全传整数
+    def querystocks(self, stocks, weights=[], cap=10):
         all = self.db.cursor().execute('select * from fundinfo')
         results = []
         for item in all:
@@ -58,20 +68,35 @@ class FundAnalysis(SBAnalysis):
             f.parse_sqlresult(item)
             results.append(f)
         for fundinfo in results:
-            fundinfo.inter = len([i for i in stocks if i in fundinfo.stocks])
-            print fundinfo.inter
-        results.sort(lambda x,y: y.inter-x.inter)
+            fundinfo.inter = 0
+            if len(fundinfo.stocks) > 1:
+                for (index, stock_per) in enumerate(fundinfo.stocks):
+                    stock, per = stock_per.split('-')
+                    if stock in stocks:
+                        # 如果没权重就当1了
+                        if len(weights) > 0:
+                            i = stocks.index(stock)
+                            fundinfo.inter += float(per.split('%')[0]) * float(weights[i])
+                        else:
+                            fundinfo.inter += float(per.split('%')[0])
+        results.sort(lambda x,y: int(y.inter-x.inter))
         return results[0:cap]
 
-def printfunds(funds, simplify=True):
+def _printfunds(funds, simplify=True):
     print 'funds count is ' + str(len(funds))
     for fund in funds:
         if simplify:
-            print fund.code, fund.name, fund.url, fund.track
+            print fund.code, fund.shortname, fund.url, fund.track, fund.compare
         else:
             print fund
 
 
 if __name__ == "__main__":
-    a = FundAnalysis(FundCollector.DATABASE_NAME)
-    printfunds(a.queryname('医疗'))
+    a = FundAnalysis()
+    # printfunds(a.querykeyword('基本面'))
+    # printfunds(a.queryname('景顺长城沪深300'),False)
+    # for a,b in enumerate('a,b,c'):
+    #     print a, b
+    # printfunds(a.querystocks(['国投电力', '川投能源']))
+    # printfunds(a.querycode('161227'), False)
+    _printfunds(a.querykeyword('环保'))
