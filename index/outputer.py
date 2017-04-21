@@ -37,16 +37,10 @@ class IndexQuotation:
 # 一般输入的形式都是
 class IndexOutputer(object):
 
+    DISCARD_LARGE_STANDARD = 200
+
     def __init__(self):
         self.flat_policy = 0
-
-    #对数组的数组取中位数,自然不需要什么抹平
-    def _median(self, data):
-        mids = []
-        for one_list in data:
-            one_list = sorted(one_list)
-            mids.append(median(one_list))
-        return mids
 
     # 暂时不知道什么策略,先留白吧,pe和pb可能策略也不一样,所以写了两个函数
     def _flat(self, pes, flat_policy = StockDataFlatPolicy.RAW.value):
@@ -56,7 +50,7 @@ class IndexOutputer(object):
                 if flat_policy & StockDataFlatPolicy.DISCARD_NEGATIVE.value:
                     value = [i for i in value if i >= 0]
                 if flat_policy & StockDataFlatPolicy.DISCARD_LARGE.value:
-                    value = [i for i in value if i <= 100]
+                    value = [i for i in value if i <= IndexOutputer.DISCARD_LARGE_STANDARD]
                 if flat_policy & StockDataFlatPolicy.ZERO_NEGATIVE.value:
                     value = [max(i, 0) for i in value]
                 pes[index] = value
@@ -65,7 +59,7 @@ class IndexOutputer(object):
             flat_pes.append(sum(value)/len(value))
         return flat_pes
 
-    def _flat_pb(selfself, pbs, flat_policy = StockDataFlatPolicy.RAW.value):
+    def _flat_pb(self, pbs, flat_policy = StockDataFlatPolicy.RAW.value):
         pass
 
     # 纯粹按数据份数来百分比值,可能以后会有按年份分的
@@ -83,12 +77,14 @@ class IndexOutputer(object):
     # 数据时间段xxx天
     # 0%pe为9.2, 10%pe为10.2, 20%pe威武12, ... 100%pe为30
     # 0#pb为xx...
-    def print_index_quotations(self, index_quotations, flat_policy=StockDataFlatPolicy.NORMAL.value, average_policy=StockDataAveragePolicy.MEAN.value,
-                               today_pes=[], today_pbs=[]):
+    def print_index_quotations(self, index_quotations, flat_policy=StockDataFlatPolicy.NORMAL.value, average_policy=StockDataAveragePolicy.MEAN.value):
         index_quotations = to_container(index_quotations)
         for index_quotation in index_quotations:
             index_info = index_quotation[0]
+            # 输出一下实际数据的起始日期吧,毕竟编制方案和choice未必一致
+            print ''
             print index_info
+            print '实际有数据的起始计算日期为' + index_quotation[1][0][0]
             pes = []
             pbs = []
             for index_day_quotation in index_quotation[1]:
@@ -96,30 +92,49 @@ class IndexOutputer(object):
                 pbs.append(index_day_quotation[2])
             # 此时的pes和pbs是数组的数组,且未经处理
             # 请注意中位数不是指把他们加起来之后的中位数,而是每天的中位数哦
-            mid_pes = self._median(pes)
-            mid_pbs = self._median(pbs)
+            mid_pes = _median(pes)
+            mid_pbs = _median(pbs)
+            today_mid_pes = mid_pes[LAST_ELEMENT_INDEX]
+            today_mid_pbs = mid_pbs[LAST_ELEMENT_INDEX]
             # 再根据输出策略进行数据抹平,才好算平均数,pb就不抹平了吧
             flat_pes = self._flat(pes, flat_policy)
             flat_pbs = self._flat(pbs, StockDataFlatPolicy.RAW.value)
+            today_flat_pes = flat_pes[LAST_ELEMENT_INDEX]
+            today_flat_pbs = flat_pbs[LAST_ELEMENT_INDEX]
+
             mid_segmented_pes = self._segment(mid_pes)
             mid_segmented_pbs = self._segment(mid_pbs)
             flat_segmented_pes = self._segment(flat_pes)
             flat_segmented_pbs = self._segment(flat_pbs)
 
-            print 'pe 平均数百分点位为 ' + ','.join([str(i) for i in flat_segmented_pes])
-            print 'pe 中位数百分点位为 ' + ','.join([str(i) for i in mid_segmented_pes])
-            print 'pb 平均数百分点位为 ' + ','.join([str(i) for i in flat_segmented_pbs])
-            print 'pb 中位数百分点位为 ' + ','.join([str(i) for i in mid_segmented_pbs])
-            # 最后应该再来个当天处于什么百分位比较好,就以最后一个行情为当天吧
-
+            print 'pe平均数百分点位为 ' + ', '.join([rounded_to(i) for i in flat_segmented_pes])
+            print '当天pe平均数为' + rounded_to(flat_pes[LAST_ELEMENT_INDEX]) + ' 平均数百分位为' + rounded_to(_in_percent(flat_pes, LAST_ELEMENT_INDEX)*100) + '%'
+            print '当天pe平均数偏差中值为 '
+            print 'pe中位数百分点位为 ' + ', '.join([rounded_to(i) for i in mid_segmented_pes])
+            print '当天pe中位数为' + rounded_to(mid_pes[LAST_ELEMENT_INDEX]) + ' 中位数百分位为' + rounded_to(_in_percent(mid_pes, LAST_ELEMENT_INDEX)*100) + '%'
+            print 'pb平均数百分点位为 ' + ', '.join([rounded_to(i) for i in flat_segmented_pbs])
+            print '当天pb平均数为' + rounded_to(flat_pbs[LAST_ELEMENT_INDEX]) + ' 平均数百分位为' + rounded_to(_in_percent(flat_pbs, LAST_ELEMENT_INDEX)*100) + '%'
+            print 'pb中位数百分点位为 ' + ', '.join([rounded_to(i) for i in mid_segmented_pbs])
+            print '当天pb中位数为' + rounded_to(mid_pbs[LAST_ELEMENT_INDEX]) + ' 中位数百分位为' + rounded_to(_in_percent(mid_pbs, LAST_ELEMENT_INDEX)*100) + '%'
 
 
     # 绘图形式输出,先占个位吧
     def draw_index_quotations(self, index_quotations):
         pass
 
-    def xixi(self, s, b, c='hehe', d='zz'):
-        print s, b, c, d
+# 单条数据在整体数据里的百分比
+def _in_percent(l, i):
+    d = l[i]
+    sl = sorted(l)
+    return sl.index(d) / float(len(sl))
+
+#对数组的数组取中位数,自然不需要什么抹平
+def _median(data):
+    mids = []
+    for one_list in data:
+        one_list = sorted(one_list)
+        mids.append(median(one_list))
+    return mids
 
 if __name__ == '__main__':
     a = IndexOutputer()

@@ -11,10 +11,10 @@ import os
 #数据库的分析器,前提是数据库已经下载好了,所以先要运行main
 class FundAnalysis(SBAnalysis):
 
-    def __init__(self, db_name=FundCollector.DATABASE_NAME):
+    def __init__(self, path='', db_name=FundCollector.DATABASE_NAME):
         # 有点很烦的
         # self.stock_analysis = FundAnalysis('..'+os.sep+'stock'+os.sep+StockCollector.DATABASE_NAME)
-        super(FundAnalysis, self).__init__(db_name)
+        super(FundAnalysis, self).__init__(path+db_name)
 
     #code和name都是只对相应值进行检索
     def querycode(self, code, order='', isasc=True):
@@ -99,4 +99,4 @@ if __name__ == "__main__":
     #     print a, b
     # printfunds(a.querystocks(['国投电力', '川投能源']))
     # printfunds(a.querycode('161227'), False)
-    _printfunds(a.querykeyword('环保'))
+    _printfunds(a.querykeyword('波动'))

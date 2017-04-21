@@ -14,11 +14,11 @@ sys.setdefaultencoding('utf-8')
 #这里主要还是输出纯原始数据,图表交由output搞定,所以直接用的话可能会有比较夸张的数据,比如市盈率超过一万这种
 class IndexAnalysis(SBAnalysis):
 
-    def __init__(self, db_name=IndexCollector.DATABASE_NAME):
+    def __init__(self, path='', db_name=IndexCollector.DATABASE_NAME):
         # 有点很烦的
-        self.stock_analysis = StockAnalysis('..'+os.sep+'stock'+os.sep+StockCollector.DATABASE_NAME)
-        self.fund_analysis = FundAnalysis('..'+os.sep+'fund'+os.sep+FundCollector.DATABASE_NAME)
-        super(IndexAnalysis, self).__init__(db_name)
+        self.stock_analysis = StockAnalysis('..'+os.sep+'stock'+os.sep)
+        self.fund_analysis = FundAnalysis('..'+os.sep+'fund'+os.sep)
+        super(IndexAnalysis, self).__init__(path+db_name)
 
     # 虽然指数有启用日期,但是数据未必可以,所以获得的是实际有数据的起始日
     def _index_begin_date(self, index):
@@ -33,7 +33,7 @@ class IndexAnalysis(SBAnalysis):
         sql = 'SELECT {date}, {constituents} FROM {table} WHERE {date} = (SELECT MAX({date}) FROM {table} WHERE {date} <= "{input_date}");'.format(
             date=IndexConstituent.DATE_KEY, constituents=IndexConstituent.CONSTITUENTS_KEY, table=IndexCollector._constituent_tablename(index), input_date=date)
         result = self.db.execute(sql).fetchone()
-        return result
+        return result[1].split(',')
 
     # 获取一段时间内指数的成分股,这里有些疑问,首先是时间未必能全包含,比如请求的时间指数尚未开始,另外就是不可能返回每天的数据
     # 所以返回的数据是成分股变化,当然如果你非要,我也可以给你返回每天的数据,不过begin不能超过起始日就是了
@@ -82,6 +82,7 @@ class IndexAnalysis(SBAnalysis):
         indexs_info = self.query_indexs_info(indexs)
         result = []
         for index_info in indexs_info:
+            print 'start query index quotations ' + index_info.code + ' ' + index_info.name
             # 本身获取股票的历史行情是不一定要填起始日期的,但用于指数分析时成分股的begin_date不应超过指数的启用日期,不然无意义
             # 懒得考虑结束时间比开始早或者结束时间比指数启动还早的情况了哦
             real_begin_date = max(begin_date, index_info.begin_time)
@@ -147,6 +148,8 @@ if __name__ == '__main__':
     a = IndexAnalysis()
     # print a.query_index_constituents_at_date('000827', now_day())
     # a.query_stocks_in_constituents(['002259'], '000827')
-    index_quotation = a.query_indexs(['000016'], '2014-01-01')
-    o = IndexOutputer()
-    o.print_index_quotations(index_quotation)
+    # index_quotation = a.query_indexs(['000978'], '2010-01-01')
+    # o = IndexOutputer()
+    # o.print_index_quotations(index_quotation)
+    codes = a.query_index_constituents_at_date('000827')
+    print_container(a.stock_analysis.translate_codes(codes))

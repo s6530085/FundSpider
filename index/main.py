@@ -10,6 +10,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+# 这个是主叫方,就不传path了嘻嘻
 class IndexMain(object):
 
     def __init__(self):
@@ -17,6 +18,7 @@ class IndexMain(object):
         self.parser = IndexParser()
         self.downloader = IndexDownloader()
         self.analysis = IndexAnalysis()
+        self.outputer = IndexOutputer()
 
     #这个基本上不会重试放心啦
     def crawl(self, incremental=True):
@@ -37,23 +39,20 @@ class IndexMain(object):
 
 
     #具体的分析交由具体分析,main里做的事情是输出固定的指数pepb估值百分比
-    def output_standard_index(self, stock_main):
-        #先来个输出医药100的嘻嘻
-        indexs = ['000978']
-        indexs_info = []
-        for index in indexs:
-            i = 1
+    def output_standard_index(self):
+        # 把目前关注的一些
+        index_quotations = self.analysis.query_indexs(IndexCollector.ATTENTION_INDEXS, '2004-01-01')
+        self.outputer.print_index_quotations(index_quotations)
 
 
 if __name__ == '__main__':
-    #指数是建立在个股基础上的,所以要先获取个股信息
+    # 指数是建立在个股基础上的,所以要先获取个股信息
     # stock_incremental = True
-    # sm = StockMain()
-    # sm.craw(stock_incremental)
+    # sm = StockMain('..'+os.sep+'stock'+os.sep)
+    # sm.crawl(stock_incremental)
 
-    index_incremental = False
+    index_incremental = True
     im = IndexMain()
-    im.crawl(index_incremental)
-    # im.output_standard_index()
+    # im.crawl(index_incremental)
 
-
+    im.output_standard_index()

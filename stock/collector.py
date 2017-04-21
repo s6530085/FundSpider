@@ -41,8 +41,8 @@ class StockCollector(object):
         '''.format(StockCollector._stock_tablename(code), StockQuotation.DATE_KEY))
 
 
-    def __init__(self):
-        self.db = sqlite3.connect(StockCollector.DATABASE_NAME)
+    def __init__(self, path=''):
+        self.db = sqlite3.connect(path+StockCollector.DATABASE_NAME)
         #stock分表,第一个是所有股票的列表,另外就是每股的每日行情了
         self._create_main_table()
         #全stock需要爬虫后才有哦
@@ -93,7 +93,6 @@ class StockCollector(object):
         # weekday = datetime.now().weekday()
         # if weekday == 5 or weekday == 6:
         #     return False
-
 
 
     #某只股票的行情最后更新时间,其实理论上每个最后更新时间应该都是一样的,

@@ -2,7 +2,7 @@
 __author__ = 'study_sun'
 
 __all__ = ["safetofloat", "now_day", "print_container", "next_day", "days_in_range", "LAST_ELEMENT_INDEX",
-           "STAND_DATE_FORMAT", "to_container", "median"]
+           "STAND_DATE_FORMAT", "to_container", "median", "rounded_to"]
 
 import sys
 from datetime import datetime, timedelta, date
@@ -70,5 +70,12 @@ def median(l):
     else:
         return l[length/2]
 
+# 把字符串或数字保留相应位数的小数点,最后返回str
+def rounded_to(number, digit=3):
+    if not isinstance(number, float):
+        number = float(number)
+    return ('%.'+str(digit)+'f') % number
+
 if __name__ == "__main__":
     print days_in_range('2011-01-28', '2011-02-03')
+    print rounded_to(1.2345, 3)

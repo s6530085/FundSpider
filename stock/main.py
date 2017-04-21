@@ -13,11 +13,11 @@ sys.setdefaultencoding('utf-8')
 
 class StockMain(object):
 
-    def __init__(self):
+    def __init__(self, path=''):
         self.url_manager = StockURLManager()
         self.downloader = StockDownloader()
         self.parser = StockParser()
-        self.collector = StockCollector()
+        self.collector = StockCollector(path)
 
     def crawl(self, incremental=True):
         homeurl = 'http://quote.eastmoney.com/stocklist.html'

@@ -10,8 +10,8 @@ from entity import StockQuotation, StockInfo
 #提供个股信息,纯数据输出,可以自己用也可以指数模块用
 class StockAnalysis(SBAnalysis):
 
-    def __init__(self, db_name=StockCollector.DATABASE_NAME):
-         super(StockAnalysis, self).__init__(db_name)
+    def __init__(self, path='', db_name=StockCollector.DATABASE_NAME):
+         super(StockAnalysis, self).__init__(path + db_name)
 
     #这个只有一个哦
     def querybycode(self, stock_code):
@@ -118,6 +118,7 @@ class StockAnalysis(SBAnalysis):
             code_key=StockInfo.CODE_KEY, table_name=StockCollector.MAIN_TABLE_NAME,short_name_key=StockInfo.SHORT_NAME_KEY) % ','.join('?' for name in names)
         results = self.db.execute(sql, names).fetchall()
         return  [i[0] for i in results]
+
 
 if __name__ == "__main__":
     a = StockAnalysis()
