@@ -40,9 +40,10 @@ class IndexMain(object):
 
     #具体的分析交由具体分析,main里做的事情是输出固定的指数pepb估值百分比
     def output_standard_index(self):
-        # 把目前关注的一些
+        # 标准输出就只打那些我关注的指数啦
         index_quotations = self.analysis.query_indexs(IndexCollector.ATTENTION_INDEXS, '2004-01-01')
         self.outputer.print_index_quotations(index_quotations)
+        self.outputer.draw_index_quotations(index_quotations)
 
 
 if __name__ == '__main__':
@@ -51,7 +52,7 @@ if __name__ == '__main__':
     # sm = StockMain('..'+os.sep+'stock'+os.sep)
     # sm.crawl(stock_incremental)
 
-    index_incremental = True
+    # index_incremental = True
     im = IndexMain()
     # im.crawl(index_incremental)
 

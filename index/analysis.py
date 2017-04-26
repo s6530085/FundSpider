@@ -135,7 +135,7 @@ class IndexAnalysis(SBAnalysis):
     # 指数基金的持仓还好,很多主题基金的持仓和其主题完全不符,所以就有验证十大持仓是否是其主题指数的成分股
     def query_stocks_in_constituents(self, fund_codes, index_code):
         fund_codes = to_container(fund_codes)
-        _, constituents = self.query_index_constituents_at_date(index_code, now_day())
+        constituents = self.query_index_constituents_at_date(index_code, now_day())
         constituents = constituents.split(',')
         print '指数'+index_code+"成分股共"+str(len(constituents))+'只'
         for fund_code in fund_codes:
@@ -144,6 +144,15 @@ class IndexAnalysis(SBAnalysis):
             contain_count= len(list((set(stocks).union(set(constituents)))^(set(stocks)^set(constituents))))
             print fund_info.shortname + str(len(stocks)) + '大持仓, ' + str(contain_count) + '在指数成分股中'
 
+    # 看看两个指数的成分股重合度
+    def query_index_intersection(self, index1, index2):
+        constituents1 = self.query_index_constituents_at_date(index1, now_day())
+        constituents2 = self.query_index_constituents_at_date(index2, now_day())
+        intersection = list_intersection(constituents1, constituents2)
+        print '指数' + index1 + '共有' + str(len(constituents1)) + '只成分股份 ' + '指数' + index2 + '共有' + str(len(constituents2)) + '只成分股份 ' + \
+              '共有成分股为' + str(len(intersection)) + '只'
+
+
 if __name__ == '__main__':
     a = IndexAnalysis()
     # print a.query_index_constituents_at_date('000827', now_day())
@@ -151,5 +160,6 @@ if __name__ == '__main__':
     # index_quotation = a.query_indexs(['000978'], '2010-01-01')
     # o = IndexOutputer()
     # o.print_index_quotations(index_quotation)
-    codes = a.query_index_constituents_at_date('000827')
-    print_container(a.stock_analysis.translate_codes(codes))
+    # codes = a.query_index_constituents_at_date('000827')
+    # print_container(a.stock_analysis.translate_codes(codes))
+    # a.query_index_intersection('000300', '000827')

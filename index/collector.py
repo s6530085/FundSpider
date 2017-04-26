@@ -16,11 +16,17 @@ class IndexCollector(object):
     DATABASE_TABLE_NAME = u'indexinfo'
     DATABASE_NAME = 'index.db'
 
-    #目前只关注这些指数,不过这些指数很有意思的,指定深沪市场的除外,跨市场的都会有两个指数,分别供使用,一般000开头的是沪市的,399开头的是深市的,都有的话优先采用沪市
-    # 依次是上证50,基本面50,沪深300,中证500, 中证800, 中证1000, 中小板综, 创业板指, 中证红利, 中证养老
-    # 中证环保, 中证新兴, 医药100, 全指消费, 全指医药, 全指金融, 全指信息, 中证全指
-    ATTENTION_INDEXS = ['000016', '000925', '000300', '000905', '000906', '000852', '399101', '399006', '000922', '399812',
-                        '000827', '000964', '000978', '000990', '000991', '000992', '000993']#, '000985']
+    # 目前比较关注的指数,会加载历史数据,不过这些指数很有意思的,指定深沪市场的除外,跨市场的都会有两个指数,分别供使用,一般000开头的是沪市的,399开头的是深市的,都有的话优先采用沪市
+    # 全部存在数据库里,但未必感兴趣,因为有很多是暂时没有机会,或者指数重叠性太高,所以差不多的指数就选了数据量较大的
+    # 上证50,基本面50,沪深300,中证500, 中证800, 中证1000, 中小板综, 创业板指, 中证全指, 上证综指, 深证成指
+    # 中证环保, 中证新兴, 医药100, 全指消费, 全指医药, 全指金融, 全指信息, 国证食品, 中证红利, 中证养老(养老产业)
+    ALL_INDEXS = ['000016', '000925', '000300', '000905', '000906', '000852', '399101', '399006', '000985', '000001', '399001',
+                  '000827', '000964', '000978', '000990', '000991', '000992', '000993', '399396', '000922', '399812']
+    # 真正用在默认输出里的指数,暂时不多,依次为
+    # 上证50,沪深300,中证500, 中小板综, 创业板指, 深证成指
+    # 医药100, 中证养老, 中证环保, 中证红利, 全指消费
+    ATTENTION_INDEXS = ['000016', '000300', '000905', '000852', '399006', '399001',
+                        '000978', '399812', '000827', '000922', '000990', '399396']
 
     def __init__(self):
         self.db = sqlite3.connect(IndexCollector.DATABASE_NAME)
@@ -101,7 +107,7 @@ class IndexCollector(object):
             for f in files:
                 #文件名就是追踪的指数标号
                 file_name = f.split('.')[0]
-                if IndexCollector.ATTENTION_INDEXS.__contains__(file_name):
+                if IndexCollector.ALL_INDEXS.__contains__(file_name):
                     print 'load index change ' + file_name
                     self._load_index_constituent(root+f, file_name)
 
@@ -134,6 +140,9 @@ class IndexCollector(object):
                 self.db.commit()
                 current_date = row_date
             stock_code = sheet.cell(row, 2).value.split('.')[0]
+            # 有个问题,就是某些指数纳入了b股,但是我的股票数据库里又没有b股的历史数据,只能目前暂时屏蔽了
+            if stock_code.startswith('2'):
+                continue
             operation = sheet.cell(row, 4).value
             if operation == u'纳入':
                 current_constituent.append(stock_code)

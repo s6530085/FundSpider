@@ -5,6 +5,9 @@ import sys
 from spider_base.convenient import *
 reload(sys)
 sys.setdefaultencoding('utf-8')
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
 from enum import Enum, unique
 # 数据抹平策略:
@@ -94,39 +97,54 @@ class IndexOutputer(object):
             # 请注意中位数不是指把他们加起来之后的中位数,而是每天的中位数哦
             mid_pes = _median(pes)
             mid_pbs = _median(pbs)
-            today_mid_pes = mid_pes[LAST_ELEMENT_INDEX]
-            today_mid_pbs = mid_pbs[LAST_ELEMENT_INDEX]
             # 再根据输出策略进行数据抹平,才好算平均数,pb就不抹平了吧
             flat_pes = self._flat(pes, flat_policy)
             flat_pbs = self._flat(pbs, StockDataFlatPolicy.RAW.value)
-            today_flat_pes = flat_pes[LAST_ELEMENT_INDEX]
-            today_flat_pbs = flat_pbs[LAST_ELEMENT_INDEX]
 
             mid_segmented_pes = self._segment(mid_pes)
             mid_segmented_pbs = self._segment(mid_pbs)
             flat_segmented_pes = self._segment(flat_pes)
             flat_segmented_pbs = self._segment(flat_pbs)
-
-            print 'pe平均数百分点位为 ' + ', '.join([rounded_to(i) for i in flat_segmented_pes])
-            print '当天pe平均数为' + rounded_to(flat_pes[LAST_ELEMENT_INDEX]) + ' 平均数百分位为' + rounded_to(_in_percent(flat_pes, LAST_ELEMENT_INDEX)*100) + '%'
-            print '当天pe平均数偏差中值为 '
-            print 'pe中位数百分点位为 ' + ', '.join([rounded_to(i) for i in mid_segmented_pes])
-            print '当天pe中位数为' + rounded_to(mid_pes[LAST_ELEMENT_INDEX]) + ' 中位数百分位为' + rounded_to(_in_percent(mid_pes, LAST_ELEMENT_INDEX)*100) + '%'
-            print 'pb平均数百分点位为 ' + ', '.join([rounded_to(i) for i in flat_segmented_pbs])
-            print '当天pb平均数为' + rounded_to(flat_pbs[LAST_ELEMENT_INDEX]) + ' 平均数百分位为' + rounded_to(_in_percent(flat_pbs, LAST_ELEMENT_INDEX)*100) + '%'
-            print 'pb中位数百分点位为 ' + ', '.join([rounded_to(i) for i in mid_segmented_pbs])
-            print '当天pb中位数为' + rounded_to(mid_pbs[LAST_ELEMENT_INDEX]) + ' 中位数百分位为' + rounded_to(_in_percent(mid_pbs, LAST_ELEMENT_INDEX)*100) + '%'
+            today_flat_pe = flat_pes[LAST_ELEMENT_INDEX]
+            today_flat_pb = flat_pbs[LAST_ELEMENT_INDEX]
+            today_mid_pe = mid_pes[LAST_ELEMENT_INDEX]
+            today_mid_pb = mid_pbs[LAST_ELEMENT_INDEX]
+            print 'pe平均数百分点位为 ' + _print_percent(flat_segmented_pes)
+            print '当天pe平均数为' + rounded_to(today_flat_pe) + ' 百分位为' + rounded_to(_in_percent(flat_pes, today_flat_pe)*100) + '%',
+            # 平均値的偏差中值的基准我想了半天,还是用平均値的平均値来,影响的,中位值的偏差中值基准也是中位值的中位值
+            print '偏差中值为 ' + rounded_to(_in_offset(sum(flat_pes)/len(flat_pes), today_flat_pe)) + "%"
+            print 'pe中位数百分点位为 ' + _print_percent(mid_segmented_pes)
+            print '当天pe中位数为' + rounded_to(today_mid_pe) + ' 中位数百分位为' + rounded_to(_in_percent(mid_pes, today_mid_pe)*100) + '%',
+            print '偏差中值为 ' + rounded_to(_in_offset(median(sorted(mid_pes)), today_mid_pe)) + '%'
+            print 'pb平均数百分点位为 ' + _print_percent(flat_segmented_pbs)
+            print '当天pb平均数为' + rounded_to(today_flat_pb) + ' 平均数百分位为' + rounded_to(_in_percent(flat_pbs, today_flat_pb)*100) + '%',
+            print '偏差中值为 ' + rounded_to(_in_offset(sum(flat_pbs)/len(flat_pbs), today_flat_pb)) + '%'
+            print 'pb中位数百分点位为 ' + _print_percent(mid_segmented_pbs)
+            print '当天pb中位数为' + rounded_to(today_mid_pb) + ' 中位数百分位为' + rounded_to(_in_percent(mid_pbs, today_mid_pb)*100) + '%',
+            print '偏差中值为' + rounded_to(median(sorted(mid_pbs))) + '%'
 
 
     # 绘图形式输出,先占个位吧
     def draw_index_quotations(self, index_quotations):
-        pass
+        index_quotations = to_container(index_quotations)
+        pe_df = pd.DataFrame()
+        pb_df = pd.DataFrame()
+        
+
 
 # 单条数据在整体数据里的百分比
 def _in_percent(l, i):
-    d = l[i]
     sl = sorted(l)
-    return sl.index(d) / float(len(sl))
+    return sl.index(i) / float(len(sl))
+
+
+# 两个数据的偏差,前一个参数为基准
+def _in_offset(s, i):
+    return (i-s)/s*100
+
+def _print_percent(l):
+    return ', '.join([str(i*10) + '% : ' + str(l[i]) for i in range(len(l))])
+
 
 #对数组的数组取中位数,自然不需要什么抹平
 def _median(data):

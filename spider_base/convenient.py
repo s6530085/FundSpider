@@ -2,7 +2,7 @@
 __author__ = 'study_sun'
 
 __all__ = ["safetofloat", "now_day", "print_container", "next_day", "days_in_range", "LAST_ELEMENT_INDEX",
-           "STAND_DATE_FORMAT", "to_container", "median", "rounded_to"]
+           "STAND_DATE_FORMAT", "to_container", "median", "rounded_to", "list_intersection", "list_union"]
 
 import sys
 from datetime import datetime, timedelta, date
@@ -50,9 +50,9 @@ def days_in_range(begin_date, end_date, format=STAND_DATE_FORMAT):
             days.append(day)
     return days
 
-def print_container(container):
+def print_container(container, sep='\n'):
     for item in container:
-        print item
+        print item + sep,
 
 # 懒得判断参数是单个还是集合,直接强转为集合好了
 def to_container(parameter):
@@ -75,6 +75,15 @@ def rounded_to(number, digit=3):
     if not isinstance(number, float):
         number = float(number)
     return ('%.'+str(digit)+'f') % number
+
+# 两个list的交集
+def list_intersection(l1, l2):
+    return [i for i in l1 if i in l2]
+
+# 两个list的并集
+def list_union(l1, l2):
+    return list(set(l1).union(set(l2)))
+
 
 if __name__ == "__main__":
     print days_in_range('2011-01-28', '2011-02-03')
