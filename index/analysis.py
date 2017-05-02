@@ -74,7 +74,7 @@ class IndexAnalysis(SBAnalysis):
 
     # 一般的对外使用接口,展示指数(一般是多个,比较方便对比)在指定日期内的估值走势和区间
     # 最后返回的数据格式是[(指数信息, [index_quotation]),],index_quotation的结构为(date, [pes], [pbs])pe,pb都是原始数据
-    def query_indexs(self, indexs, begin_date='', end_date=''):
+    def query_indexs(self, indexs=IndexCollector.ATTENTION_INDEXS, begin_date='2004-01-01', end_date=''):
         indexs = to_container(indexs)
         # 虽然对外的接口都处理了这个情况,但是我接口间还是需要用到的
         if end_date == '':
@@ -114,12 +114,13 @@ class IndexAnalysis(SBAnalysis):
         sql = 'SELECT * FROM {table} WHERE {code} IN ({code_list});'.format(
             table=IndexCollector.DATABASE_TABLE_NAME, code=IndexInfo.CODE_KEY, code_list=', '.join('?' for _ in indexs))
         result = self.db.execute(sql, indexs).fetchall()
-        infoes = []
-
+        infoes = ['a' for _ in indexs]
+        # 其实in的搜索未必能都搜索到,但在这里应该是能保证的,所以就直接当作全有,然后按位替换,因为in的结果不是我输入的顺序
         for raw_info in result:
             info = IndexInfo()
             info.parse_sqlresult(raw_info)
-            infoes.append(info)
+            index = indexs.index(info.code)
+            infoes[index] = info
         return infoes
 
     def raw_query_indexs_info(self, sql):

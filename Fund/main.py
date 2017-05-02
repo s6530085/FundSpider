@@ -16,25 +16,26 @@ class FundMain(object):
     #先定接口，再做实现，其中首页特殊处理一下,基金三个月才出一次一次季报,如果不是数据结构改了大部分时间没必要全量更新
     def crawl(self, homeurl, incremental=True):
         # 先处理首页
-        # home_content = self.html_downloader.download(homeurl)
-        # if home_content is None:
-        #     return
-        #
-        # funds_info = self.html_paser.parse_home(home_content)
-        # if funds_info is None:
-        #     return
+        home_content = self.html_downloader.download(homeurl)
+        if home_content is None:
+            return
+
+        funds_info = self.html_paser.parse_home(home_content)
+        if funds_info is None:
+            return
 
         count = 0
         finished_count = [0]
 
-        # for fund_info_code in funds_info:
-        #     # (code, name) = fund_info
-        #     #其实name根本没用到
-        #     #全量更新或者新的基金才下载
-        #     if not incremental or not self.collector.fundexist(fund_info_code):
-        #         self.url_manager.add_url(fund_info_code)
-        #         count += 1
-        self.url_manager.add_url("184721")
+        for fund_info_code in funds_info:
+            # (code, name) = fund_info
+            #其实name根本没用到
+            #全量更新或者新的基金才下载
+            if not incremental or not self.collector.fundexist(fund_info_code):
+                self.url_manager.add_url(fund_info_code)
+                count += 1
+        # self.url_manager.add_url("002443")
+
         print '共需爬取基金详情 ' + str(count) + " 个"
 
         def inner_crawl(isretry=False):

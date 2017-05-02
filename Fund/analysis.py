@@ -32,18 +32,28 @@ class FundAnalysis(SBAnalysis):
     #其他方法懒得扩展了,如果想要检索
     def querybycol(self, colname, colvalue, order='', isasc=True):
         sql = '''
-        select * from {} where {} like "%{}%"
-        '''.format(FundCollector.DATABASE_TABLE_NAME, colname, colvalue)
+        SELECT * FROM {table} WHERE {colname} LIKE "%{colvalue}%"
+        '''.format(table=FundCollector.DATABASE_TABLE_NAME, colname=colname, colvalue=colvalue)
         if len(order) > 0 :
-            sql += ' order by {} {}'.format(order,  'asc' if isasc else 'desc')
+            sql += ' ORDER BY {order} {asc}'.format(order=order, asc='ASC' if isasc else 'DESC')
         return self.query(sql)
 
     #一般从名字,追踪标的,投资范围和策略里搜索
     def querykeyword(self, keyword):
         #投资策略废话太多,什么都有,搜索其无意义
         sql = '''
-        select * from fundinfo where name like "%{}%" or compare like "%{}%" or track like "%{}%" or limits like "%{}%"
-        '''.format(keyword, keyword, keyword, keyword)
+        SELECT * FROM {table} WHERE {name} LIKE "%{keyword}%" OR {compare} LIKE "%{keyword}%" OR {track} LIKE "%{keyword}%" OR {limits} LIKE "%{keyword}%"
+        '''.format(table=FundCollector.DATABASE_TABLE_NAME, name=FundInfo.NAME_KEY, compare=FundInfo.COMPARE_KEY, track=FundInfo.TRACK_KEY, limits=FundInfo.LIMITS_KEY, keyword=keyword)
+        return self.query(sql)
+
+    # 查询明星经理人,不过因为季报的原因,可能不是那么及时,顺便可以指定下公司,不然重名就烦了
+    def querymanager(self, manager, company=''):
+        sql = '''
+        SELECT * FROM {table} WHERE {manager_key} LIKE '%{manager}%'
+        '''.format(table=FundCollector.DATABASE_TABLE_NAME, manager_key=FundInfo.MANAGER_KEY, manager=manager)
+        if len(company) > 0:
+            sql += ' AND {company_key} LIKE "%{company}%"'.format(company_key=FundInfo.COMPANY_KEY, company=company)
+        sql += ';'
         return self.query(sql)
 
     #这个是直接写好sql传啦.理论上都是最后调这个的哦
@@ -61,7 +71,7 @@ class FundAnalysis(SBAnalysis):
     # 传递参数和权重主要是为了套利,但是基金三个月才出一次季报,鬼知道是不是已经换股了,只能说是投资有风险了
     # weight要么不传,要传就要统一口径,建议全传整数
     def querystocks(self, stocks, weights=[], cap=10):
-        all = self.db.cursor().execute('select * from fundinfo')
+        all = self.db.cursor().execute('SELECT * FROM {table}'.format(table=FundCollector.DATABASE_TABLE_NAME))
         results = []
         for item in all:
             f = FundInfo()
@@ -99,4 +109,4 @@ if __name__ == "__main__":
     #     print a, b
     # printfunds(a.querystocks(['国投电力', '川投能源']))
     # printfunds(a.querycode('161227'), False)
-    _printfunds(a.querykeyword('波动'))
+    _printfunds(a.querymanager('杨云'))

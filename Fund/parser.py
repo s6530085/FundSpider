@@ -212,7 +212,10 @@ class FundParser(object):
                 # tor的太多了,我只需要其中第三个
                 per = pers[index*5+2]
                 # 懒得再做一个字段了,就用[国投电力-3.6%,川投能源-4.1%]这种形式了
-                info.stocks.append(stocked.text + '-' + per.text)
+                # 不过网站有时候有bug,会没有文本,只好防范一下
+                stockname = stocked.text
+                if not stockname is None and len(stockname) > 0:
+                    info.stocks.append(stockname + '-' + per.text)
 
     def parse_annual(self, info, content):
         #需要小心的是,收益算年化,排名则是算术平均值,以及没有数值不能简单地以0替代,否则会有偏差

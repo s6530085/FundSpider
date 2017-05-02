@@ -41,10 +41,9 @@ class IndexMain(object):
     #具体的分析交由具体分析,main里做的事情是输出固定的指数pepb估值百分比
     def output_standard_index(self):
         # 标准输出就只打那些我关注的指数啦
-        index_quotations = self.analysis.query_indexs(IndexCollector.ATTENTION_INDEXS, '2004-01-01')
-        self.outputer.print_index_quotations(index_quotations)
-        self.outputer.draw_index_quotations(index_quotations)
-
+        # 后来发现所有关注的指数一下子输出实在有点看不清,就分宽基和宅基分别输出了
+        self.outputer.standard_output(self.analysis.query_indexs(IndexCollector.ATTENTION_BROAD_INDEXS, IndexCollector.ATTENTION_BROAD_INDEXS_BEGIN_DATE), IndexCollector.ATTENTION_BROAD_INDEXS_BEGIN_DATE)
+        # self.outputer.standard_output(self.analysis.query_indexs(IndexCollector.ATTENTION_SECTION_INDEXS, IndexCollector.ATTENTION_SECTION_INDEXS_BEGIN_DATE), IndexCollector.ATTENTION_SECTION_INDEXS_BEGIN_DATE, True)
 
 if __name__ == '__main__':
     # 指数是建立在个股基础上的,所以要先获取个股信息
@@ -52,7 +51,7 @@ if __name__ == '__main__':
     # sm = StockMain('..'+os.sep+'stock'+os.sep)
     # sm.crawl(stock_incremental)
 
-    # index_incremental = True
+    # index_incremental = False
     im = IndexMain()
     # im.crawl(index_incremental)
 
