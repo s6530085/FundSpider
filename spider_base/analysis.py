@@ -24,5 +24,5 @@ class SBAnalysis(object):
         if self.db != None:
             self.db.close()
 
-    def rawquery(self, sql):
+    def raw_query(self, sql):
         return self.db.cursor().execute(sql)

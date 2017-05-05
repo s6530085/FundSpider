@@ -10,6 +10,7 @@ from pylab import *
 mpl.rcParams['font.sans-serif'] = ['SimHei'] #指定默认字体
 mpl.rcParams['axes.unicode_minus'] = False #解决保存图像是负号'-'显示为方块的问题
 from termcolor import colored
+from collector import *
 
 from enum import Enum, unique
 # 数据抹平策略:
@@ -78,7 +79,7 @@ class IndexOutputer(object):
         return s
 
     # 因为打印输出和图片输出很多数据时重复的,所以干脆并到里面吧
-    def standard_output(self, index_quotations, begin_date='2004-01-01', direct_show=False, flat_policy=StockDataFlatPolicy.NORMAL.value, average_policy=StockDataAveragePolicy.MEAN.value):
+    def standard_output(self, index_quotations, begin_date=IndexCollector.ATTENTION_BROAD_INDEXS_BEGIN_DATE, show_mean=False, direct_show=False, flat_policy=StockDataFlatPolicy.NORMAL.value, average_policy=StockDataAveragePolicy.MEAN.value):
         index_quotations = to_container(index_quotations)
         dfs = [pd.DataFrame() for _ in range(4)]
         [df_flat_pe, df_flat_pb, df_mid_pe, df_mid_pb] = dfs
@@ -100,6 +101,8 @@ class IndexOutputer(object):
             index_begin_date = index_quotation[1][0][0]
             begin_dates.append(index_begin_date)
             columns.append(index_info.name)
+            if show_mean:
+                columns.append(index_info.name+'历史均值')
             raw_pe = []
             raw_pb = []
             if len(longest_dates) == 0 or longest_dates[0] > index_begin_date:
@@ -125,6 +128,11 @@ class IndexOutputer(object):
             df_flat_pb[code] = _fill_series(flat_pbs[index], longest_dates)
             df_mid_pe[code] = _fill_series(mid_pes[index], longest_dates)
             df_mid_pb[code] = _fill_series(mid_pbs[index], longest_dates)
+            if show_mean:
+                df_flat_pe[code+'mean'] = pd.Series([mean(flat_pes[index])]*len(longest_dates), longest_dates)
+                df_flat_pb[code+'mean'] = pd.Series([mean(flat_pbs[index])]*len(longest_dates), longest_dates)
+                df_mid_pe[code+'mean'] = pd.Series([mean(mid_pes[index])]*len(longest_dates), longest_dates)
+                df_mid_pb[code+'mean'] = pd.Series([mean(mid_pbs[index])]*len(longest_dates), longest_dates)
 
         for df in dfs:
             df.columns = columns
@@ -232,7 +240,20 @@ def _median(data):
         mids.append(median(one_list))
     return mids
 
+def foo(para0, *para1, **para2):
+    print para0
+    print para1
+    print para2
+
 if __name__ == '__main__':
-    print '34.2' > '34.21'
-    print '34.0' > '34'
-    print '34.2' > '33.9'
+    print mean([1,2,3,4])
+    # foo(1, 2,3,4,a=6,c=7,d=9)
+    # df = pd.DataFrame()
+    # line = [0,1,2]
+    # df[1] = pd.Series([1,2,3], line)
+    # df['a'] = pd.Series([2,3,4], line)
+    # df[3] = pd.Series([3,4,5], line)
+    # df.columns = [3,2,1]
+    # df.plot()
+    # plt.show()
+    # print df[1].mean()
