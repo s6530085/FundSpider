@@ -74,12 +74,15 @@ class StockAnalysis(SBAnalysis):
         return (pes, pbs)
 
     # 同样也是明确日期范围,不需要校验,但里面到底是不是天天有就不好说了,这里的时间区间是[),返回值形如[(date, [pes], [pbs]), ]
-    def query_stocks_pepb_in_range(self, stocks, begin_date, end_date):
+    # 放弃了对其中没有数据时的处理,就用作指数计算平均値的吧,如果非要确定哪天有数据,就只传一个代码好了
+    def query_stocks_pepb_in_range(self, stocks, begin_date, end_date=''):
+        if end_date == '':
+            end_date = now_day()
         results = []
         pe_dict = dict()
         pb_dict = dict()
         # 这个date比较麻烦了,先按照工作日一个个去尝试搜索,如果有就加上,没有就当做那天不开市
-        for stock in stocks:
+        for (index, stock) in enumerate(stocks):
             sql = 'SELECT {date}, {pe}, {pb} FROM {table} WHERE {date} BETWEEN "{begin_date}" AND "{end_date}";'.format(
                 date=StockQuotation.DATE_KEY, pe=StockQuotation.PE_TTM_KEY, pb=StockQuotation.PB_KEY, table=StockCollector._stock_tablename(stock), begin_date=begin_date, end_date=end_date
             )
@@ -98,6 +101,8 @@ class StockAnalysis(SBAnalysis):
                     else:
                         pbs = [pb]
                         pb_dict[date] = pbs
+                # 没数据基本上肯定是最前面没有,万一出现中间没有的情况我也没办法
+
         sorted_dates = sorted(pe_dict.keys())
         for date in sorted_dates:
             # 或许存在pe和pb日期不对应哦
@@ -105,26 +110,32 @@ class StockAnalysis(SBAnalysis):
         return results
 
     # 某些特殊需求,给你一串002211,223311翻译过来中文名,注意有个问题就是一旦你输入错号码,那么返回的结果数目就会对不上,而且我也不知道哪些是正确的
-    # 而且顺序也不对应,请调用者自重,下同
+    # todo 需要修正
     def translate_codes(self, codes):
-        sql = 'SELECT {short_name_key} FROM {table_name} WHERE {code_key} IN (%s)'.format(
-            short_name_key=StockInfo.SHORT_NAME_KEY, table_name=StockCollector.MAIN_TABLE_NAME,code_key=StockInfo.CODE_KEY) % ','.join('?' for code in codes)
-        results = self.db.execute(sql, codes).fetchall()
-        return [i[0] for i in results]
+        names = []
+        for code in codes:
+            sql = 'SELECT {short_name_key} FROM {table_name} WHERE {code_key} = "{code}"'.format(
+                short_name_key=StockInfo.SHORT_NAME_KEY, table_name=StockCollector.MAIN_TABLE_NAME,code_key=StockInfo.CODE_KEY, code=code)
+            results = self.db.execute(sql).fetchall()
+            if len(results) > 0:
+                names.append(results[0][0])
+            else:
+                names.append("")
+        return names
 
     # 相反的,把名字改为code
     def translate_names(self, names):
         sql = 'SELECT {code_key} FROM {table_name} WHERE {short_name_key} IN (%s)'.format(
             code_key=StockInfo.CODE_KEY, table_name=StockCollector.MAIN_TABLE_NAME,short_name_key=StockInfo.SHORT_NAME_KEY) % ','.join('?' for name in names)
-        results = self.db.execute(sql, names).fetchall()
+        results = self.db.execute(sql, names).fetchone()
         return  [i[0] for i in results]
 
 
 if __name__ == "__main__":
     a = StockAnalysis()
     print_container(a.translate_codes(['600000', '000002']))
-    print a.translate_names([u'万科A', u'平安银行'])
-    # print a.query_stocks_pepb_in_range(['600000', '601766'], '2017-01-01', '2017-01-10')
+    # print a.translate_names([u'万科A', u'平安银行'])
+    print a.query_stocks_pepb_in_range(['600000', '601766'], '2019-01-01', '2019-01-10')
     # print (1, 2, None)
     # print '{name} is {{aa'.format(name='xixi')
     # print_container(a.querybyname(''))

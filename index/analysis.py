@@ -133,7 +133,7 @@ class IndexAnalysis(SBAnalysis):
             infoes.append(info)
         return infoes
 
-    # 指数基金的持仓还好,很多主题基金的持仓和其主题完全不符,所以就有验证十大持仓是否是其主题指数的成分股
+    # 指数基金的持仓还好, 很多主题基金的持仓和其主题完全不符, 所以就有验证十大持仓是否是其主题指数的成分股
     def query_stocks_in_constituents(self, fund_codes, index_code):
         fund_codes = to_container(fund_codes)
         constituents = self.query_index_constituents_at_date(index_code, now_day())

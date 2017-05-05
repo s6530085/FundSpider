@@ -2,12 +2,12 @@
 __author__ = 'study_sun'
 
 __all__ = ["safetofloat", "now_day", "print_container", "next_day", "days_in_range", "LAST_ELEMENT_INDEX",
-           "STAND_DATE_FORMAT", "to_container", "median", "rounded_to", "list_intersection", "list_union"]
-
+           "STAND_DATE_FORMAT", "to_container", "median", "rounded_to", "list_intersection", "list_union", "safe_mean"]
 import sys
 from datetime import datetime, timedelta, date
 import time
 import collections
+import math
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -21,13 +21,6 @@ def safetofloat(s, df=0.0):
         return float(s)
     except:
         return df
-
-# 除了普通的trip，顺便把头尾的斜杠去掉，只是用在本项目而已
-def sbtrip(s):
-    pass
-
-def testhehe():
-    print 'hehe'
 
 # 返回2017-12-02这样的字符串
 def now_day(format=STAND_DATE_FORMAT):
@@ -84,6 +77,15 @@ def list_intersection(l1, l2):
 def list_union(l1, l2):
     return list(set(l1).union(set(l2)))
 
+# 处理list里有nan的情况
+def safe_mean(l):
+    s = 0
+    c = 0
+    for i in l:
+        if not math.isnan(i):
+            s += i
+            c += 1
+    return s/c
 
 if __name__ == "__main__":
     print days_in_range('2011-01-28', '2011-02-03')

@@ -37,6 +37,9 @@ class IndexCollector(object):
     ATTENTION_BROAD_INDEXS_BEGIN_DATE = '2004-01-01'
     ATTENTION_SECTION_INDEXS_BEGIN_DATE = '2011-01-01'
 
+    TEST_ATTENTION_INDEXS = ['000978', '000016']
+    TEST_INDEXS_BEGIN_DATE = '2000-01-01'
+
     def __init__(self):
         self.db = sqlite3.connect(IndexCollector.DATABASE_NAME)
         #指数的表大体上是一个基础表,包含所有指数的基本信息

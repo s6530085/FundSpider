@@ -109,4 +109,4 @@ if __name__ == "__main__":
     #     print a, b
     # printfunds(a.querystocks(['国投电力', '川投能源']))
     # printfunds(a.querycode('161227'), False)
-    _printfunds(a.querymanager('杨云'))
+    _printfunds(a.querybycol(FundInfo.NAME_KEY, '银行', FundInfo.INFORATIO_KEY, isasc=False))
