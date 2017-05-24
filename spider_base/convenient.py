@@ -2,7 +2,7 @@
 __author__ = 'study_sun'
 
 __all__ = ["safetofloat", "now_day", "print_container", "next_day", "days_in_range", "LAST_ELEMENT_INDEX",
-           "STAND_DATE_FORMAT", "to_container", "median", "rounded_to", "list_intersection", "list_union", "safe_mean"]
+           "STAND_DATE_FORMAT", "to_container", "median", "rounded_to", "list_intersection", "list_union", "safe_mean", "before_day"]
 import sys
 from datetime import datetime, timedelta, date
 import time
@@ -31,6 +31,12 @@ def next_day(day, input_format=STAND_DATE_FORMAT, output_format=STAND_DATE_FORMA
     t = time.strptime(day, input_format)
     newdate = date(t.tm_year,t.tm_mon,t.tm_mday) + timedelta(1)
     return newdate.strftime(output_format)
+
+def before_day(day, input_format=STAND_DATE_FORMAT, output_format=STAND_DATE_FORMAT):
+    t = time.strptime(day, input_format)
+    newdate = date(t.tm_year,t.tm_mon,t.tm_mday) + timedelta(-1)
+    return newdate.strftime(output_format)
+
 
 # 返回[begin_date, end_date)的字符串数组哦
 def days_in_range(begin_date, end_date, format=STAND_DATE_FORMAT):

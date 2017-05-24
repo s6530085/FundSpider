@@ -133,9 +133,9 @@ class StockAnalysis(SBAnalysis):
 
 if __name__ == "__main__":
     a = StockAnalysis()
-    print_container(a.translate_codes(['600000', '000002']))
+    # print_container(a.translate_codes(['600000', '000002']))
     # print a.translate_names([u'万科A', u'平安银行'])
-    print a.query_stocks_pepb_in_range(['600000', '601766'], '2019-01-01', '2019-01-10')
+    print a.query_stocks_pepb_in_range(['600000'], '2017-05-01', '2019-01-10')
     # print (1, 2, None)
     # print '{name} is {{aa'.format(name='xixi')
     # print_container(a.querybyname(''))

@@ -250,15 +250,4 @@ class FundParser(object):
                 info.annualrank = rankvalue / rankcount
 
 if __name__ == "__main__":
-    html = '''
-    <td>zzzaaa
-	<span style="text-decoration:line-through;color:#666666">1.50%（前端）</span><br>
-	<span>天天基金优惠费率：
-		<span style="Color:#ff0000">0.15%（前端）</span>
-	</span>dddsss
-    </td>
-    '''
-    # content = etree.HTML(html, parser=etree.HTMLParser(encoding='utf-8'))
-    # spans = content.xpath('//td')
-    # p = spans[0].text
-    # print p
+    pass

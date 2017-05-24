@@ -100,9 +100,12 @@ class IndexAnalysis(SBAnalysis):
                 (date, constituent_stocks) = constituent_info
                 if index < len(constituents) - 1:
                     (next_date, _) = constituents[index+1]
+                    next_date = before_day(next_date)
                 else:
                     next_date = end_date
-                quotations = self.stock_analysis.query_stocks_pepb_in_range(constituent_stocks.split(','), date, next_date)
+                # 因为query_stocks_pepb_in_range的日期是[]形式的,所以要往后延展一天,不然最后一天会重复
+                stock_codes = constituent_stocks.split(',')
+                quotations = self.stock_analysis.query_stocks_pepb_in_range(stock_codes, date, next_date)
                 index_quotation += quotations
             result.append((index_info, index_quotation))
         return result

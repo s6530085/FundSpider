@@ -14,7 +14,7 @@ from collector import *
 
 from enum import Enum, unique
 # 数据抹平策略:
-# 0.常规:大于100的舍弃,小于0的舍弃
+# 0.常规:大于DISCARD_LARGE_STANDARD的舍弃,小于0的舍弃
 # 1.小于0的算0
 # 2.过高的数据(暂定pe>100)抛弃
 # 3.小于0的抛弃
@@ -65,6 +65,7 @@ class IndexOutputer(object):
             flat_pes.append(sum(value)/len(value))
         return flat_pes
 
+    # 本来我是不想对pb做操作的,因为其数值本身就比较小而且变化更小,但在一些st股上,其pb甚至能上万我也是醉了
     def _flat_pb(self, pbs, flat_policy = StockDataFlatPolicy.RAW.value):
         pass
 
