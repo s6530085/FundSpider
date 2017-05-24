@@ -207,10 +207,14 @@ class FundParser(object):
             #懒得记录编号了,直接用名字
             stocktds = tbs[0].xpath('.//td[@class="tol"]/a')
             pers = tbs[0].xpath('.//td[@class="tor"]')
+            # 擦,个别网页缺少元素,不能直接用5做间隔
+            interval = 5
+            if not '最新价' in content:
+                interval = 3
             for (index, stocked) in enumerate(stocktds):
                 # info.stocks.append(stocked.text)
                 # tor的太多了,我只需要其中第三个
-                per = pers[index*5+2]
+                per = pers[index*interval+2]
                 # 懒得再做一个字段了,就用[国投电力-3.6%,川投能源-4.1%]这种形式了
                 # 不过网站有时候有bug,会没有文本,只好防范一下
                 stockname = stocked.text
