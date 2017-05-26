@@ -49,9 +49,13 @@ def days_in_range(begin_date, end_date, format=STAND_DATE_FORMAT):
             days.append(day)
     return days
 
+#
 def print_container(container, sep='\n'):
-    for item in container:
-        print item + sep,
+    for (index, item) in enumerate(container):
+        print item,
+        if sep != None and index != len(container) - 1:
+            print sep,
+    print ''
 
 # 懒得判断参数是单个还是集合,直接强转为集合好了
 def to_container(parameter):
@@ -65,7 +69,7 @@ def median(l):
     l = to_container(l)
     length = len(l)
     if length%2==0:
-        return (l[length/2-1]+l[length/2])/2
+        return (l[length/2-1]+l[length/2])/2.0
     else:
         return l[length/2]
 

@@ -104,7 +104,7 @@ def _printfunds(funds, simplify=True):
 
 if __name__ == "__main__":
     a = FundAnalysis()
-    _printfunds(a.querytrack('中证500'))
+    _printfunds(a.querykeyword('低波动'))
     # printfunds(a.queryname('景顺长城沪深300'),False)
     # for a,b in enumerate('a,b,c'):
     #     print a, b

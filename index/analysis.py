@@ -129,7 +129,6 @@ class IndexAnalysis(SBAnalysis):
     def raw_query_indexs_info(self, sql):
         result = self.db.execute(sql).fetchall()
         infoes = []
-
         for raw_info in result:
             info = IndexInfo()
             info.parse_sqlresult(raw_info)
@@ -140,7 +139,6 @@ class IndexAnalysis(SBAnalysis):
     def query_stocks_in_constituents(self, fund_codes, index_code):
         fund_codes = to_container(fund_codes)
         constituents = self.query_index_constituents_at_date(index_code, now_day())
-        constituents = constituents.split(',')
         print '指数'+index_code+"成分股共"+str(len(constituents))+'只'
         for fund_code in fund_codes:
             fund_info = self.fund_analysis.querycode(fund_code)[0]
@@ -156,9 +154,20 @@ class IndexAnalysis(SBAnalysis):
         print '指数' + index1 + '共有' + str(len(constituents1)) + '只成分股份 ' + '指数' + index2 + '共有' + str(len(constituents2)) + '只成分股份 ' + \
               '共有成分股为' + str(len(intersection)) + '只'
 
+    # 看看这个股票在那些指数里面,当然得是最新的指数
+    def stock_in_index(self, stock_code):
+        result = []
+        # 不过说实话,最多的中证全指,上证指数之类的没意义又耗时,可以去掉不查
+        indexs = [i for i in IndexCollector.ALL_INDEXS if i not in ['000985', '000001', '399001']]
+        for index in indexs:
+            constituents = self.query_index_constituents_at_date(index, now_day())
+            if stock_code in constituents:
+                result.append(index)
+        return self.query_indexs_info(result)
 
 if __name__ == '__main__':
     a = IndexAnalysis()
+    print_container(a.stock_in_index('300072'))
     # print a.query_index_constituents_at_date('000827', now_day())
     # a.query_stocks_in_constituents(['002259'], '000827')
     # index_quotation = a.query_indexs(['000978'], '2010-01-01')

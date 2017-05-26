@@ -12,6 +12,24 @@ mpl.rcParams['axes.unicode_minus'] = False #解决保存图像是负号'-'显示
 from termcolor import colored
 from collector import *
 
+
+# 虽然之前想了很多抹平的算法,后来还是找了别人的实践做法,即所谓的四分法提出极端值,见https://www.lixinger.com/wiki/interquarter-calculation/
+# 极大值自然会被剔除,实际上负值也会因为a股的国情而提出,故而不需要多个枚举值,要么原始值,要么就是经过四分法处理过的值,还有个好处就是pe,pb都可以共同使用了
+# 因为仅可能用在这里,就不放到公共里面去了,唯一的问题是如果不能分成两组或者所谓的中间值不能正好取到的处理并未写明,当然我觉得如果数值足够多这都无所谓
+def _inter_quartile(l):
+    # 首先是有序的序列
+    l = sort(l)
+    # 将数组等量分为两组,当然如果是单数自然没办法
+    front = l[:len(l)/2]
+    rear = l[len(l)/2:]
+    # 再取到前后的中位数
+    front_median = median(front)
+    rear_median = median(rear)
+    diff = rear_median - front_median
+    extre_low = front_median - diff * 0.5
+    extre_high = rear_median + diff * 0.5
+    return [i for i in l if i > extre_low and i < extre_high]
+
 from enum import Enum, unique
 # 数据抹平策略:
 # 0.常规:大于DISCARD_LARGE_STANDARD的舍弃,小于0的舍弃
@@ -22,10 +40,7 @@ from enum import Enum, unique
 @unique
 class StockDataFlatPolicy(Enum):
     RAW = 0
-    ZERO_NEGATIVE = 1 << 0
-    DISCARD_NEGATIVE = 1 << 1
-    DISCARD_LARGE = 1 << 2
-    NORMAL = (DISCARD_NEGATIVE | DISCARD_LARGE)
+    QUARTER = 1
 
 # 数据输出策略,不过有点尴尬的是,如果是中位数,其实就不需要抹平数据了
 # 1.算数平均
@@ -35,39 +50,28 @@ class StockDataAveragePolicy(Enum):
     MEAN = 0
     MEDIAN = 1
 
-
-class IndexQuotation:
-    pass
-
 # 这个输出当然是输出指数啦,放进来的都是原始数据,看输出要怎么处理
 # 一般输入的形式都是
 class IndexOutputer(object):
-
-    DISCARD_LARGE_STANDARD = 200
 
     def __init__(self):
         self.flat_policy = 0
 
     # 暂时不知道什么策略,先留白吧,pe和pb可能策略也不一样,所以写了两个函数
-    def _flat(self, pes, flat_policy = StockDataFlatPolicy.RAW.value):
+    def _flat(self, pes, flat_policy = StockDataFlatPolicy.QUARTER.value):
         pes = to_container(pes)
         if flat_policy != StockDataFlatPolicy.RAW.value:
             for (index, value) in enumerate(pes):
-                if flat_policy & StockDataFlatPolicy.DISCARD_NEGATIVE.value:
-                    value = [i for i in value if i >= 0]
-                if flat_policy & StockDataFlatPolicy.DISCARD_LARGE.value:
-                    value = [i for i in value if i <= IndexOutputer.DISCARD_LARGE_STANDARD]
-                if flat_policy & StockDataFlatPolicy.ZERO_NEGATIVE.value:
-                    value = [max(i, 0) for i in value]
-                pes[index] = value
+                flatted_value = _inter_quartile(value)
+                pes[index] = flatted_value
         flat_pes = []
         for value in pes:
             flat_pes.append(sum(value)/len(value))
         return flat_pes
 
     # 本来我是不想对pb做操作的,因为其数值本身就比较小而且变化更小,但在一些st股上,其pb甚至能上万我也是醉了
-    def _flat_pb(self, pbs, flat_policy = StockDataFlatPolicy.RAW.value):
-        pass
+    # def _flat_pb(self, pbs, flat_policy = StockDataFlatPolicy.RAW.value):
+    #     pass
 
     # 纯粹按数据份数来百分比值,可能以后会有按年份分的
     # 数值请尽量多一些,不然我不好10%的取
@@ -80,7 +84,7 @@ class IndexOutputer(object):
         return s
 
     # 因为打印输出和图片输出很多数据时重复的,所以干脆并到里面吧
-    def standard_output(self, index_quotations, begin_date=IndexCollector.ATTENTION_BROAD_INDEXS_BEGIN_DATE, show_mean=False, direct_show=False, flat_policy=StockDataFlatPolicy.NORMAL.value, average_policy=StockDataAveragePolicy.MEAN.value):
+    def standard_output(self, index_quotations, begin_date=IndexCollector.ATTENTION_BROAD_INDEXS_BEGIN_DATE, show_mean=False, direct_show=False, flat_policy=StockDataFlatPolicy.QUARTER.value, average_policy=StockDataAveragePolicy.MEAN.value):
         index_quotations = to_container(index_quotations)
         dfs = [pd.DataFrame() for _ in range(4)]
         [df_flat_pe, df_flat_pb, df_mid_pe, df_mid_pb] = dfs
@@ -113,10 +117,10 @@ class IndexOutputer(object):
             for index_day_quotation in index_quotation[1]:
                 raw_pe.append(index_day_quotation[1])
                 raw_pb.append(index_day_quotation[2])
-            mid_pe = _median(raw_pe)
-            mid_pb = _median(raw_pb)
+            mid_pe = _list_median(raw_pe)
+            mid_pb = _list_median(raw_pb)
             flat_pe = self._flat(raw_pe, flat_policy)
-            flat_pb = self._flat(raw_pb, StockDataFlatPolicy.RAW.value)
+            flat_pb = self._flat(raw_pb, flat_policy)
             flat_pes.append(flat_pe)
             flat_pbs.append(flat_pb)
             mid_pes.append(mid_pe)
@@ -234,20 +238,26 @@ def _fill_series(raw_list, all_dates):
     return pd.Series(s, all_dates)
 
 #对数组的数组取中位数,自然不需要什么抹平
-def _median(data):
+def _list_median(data):
     mids = []
     for one_list in data:
         one_list = sorted(one_list)
         mids.append(median(one_list))
     return mids
 
-def foo(para0, *para1, **para2):
-    print para0
-    print para1
-    print para2
-
 if __name__ == '__main__':
-    print mean([1,2,3,4])
+    s0 =  [2, 1, 3, 5, 4, 6, 8, 7, 9, 25]
+    s1 = [50, 100, -4, -3, -2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] #-> [-3, -2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    s2 = [50, 100, -40, -3, -2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] #-> [-3, -2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    s3 = [-50, 100, -40, -3, -2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] #-> [-3, -2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    s4 = [-50, 100, -40, -3, -2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 120] #-> [-3, -2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    s5 = [-5, 100, -40, -3, -2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 120]# -> [-5, -3, -2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    # print _inter_quartile(s0)
+    print _inter_quartile(s1)
+    print _inter_quartile(s2)
+    print _inter_quartile(s3)
+    print _inter_quartile(s4)
+    print _inter_quartile(s5)
     # foo(1, 2,3,4,a=6,c=7,d=9)
     # df = pd.DataFrame()
     # line = [0,1,2]
