@@ -130,12 +130,16 @@ class StockAnalysis(SBAnalysis):
         results = self.db.execute(sql, names).fetchone()
         return  [i[0] for i in results]
 
+    def last_update_date(self):
+        sql = 'SELECT MAX({date_key}) FROM {table_name};'.format(date_key=StockQuotation.DATE_KEY, table_name=StockCollector._stock_tablename('600000'))
+        return self.db.execute(sql).fetchone()[0]
 
 if __name__ == "__main__":
     a = StockAnalysis()
     # print_container(a.translate_codes(['600000', '000002']))
     # print a.translate_names([u'万科A', u'平安银行'])
-    print a.query_stocks_pepb_in_range(['600000'], '2017-05-01', '2019-01-10')
+    # print a.query_stocks_pepb_in_range(['600000'], '2017-05-01', '2019-01-10')
     # print (1, 2, None)
     # print '{name} is {{aa'.format(name='xixi')
     # print_container(a.querybyname(''))
+    print a.last_update_date()

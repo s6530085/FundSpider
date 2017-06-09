@@ -84,7 +84,7 @@ class IndexOutputer(object):
         return s
 
     # 因为打印输出和图片输出很多数据时重复的,所以干脆并到里面吧
-    def standard_output(self, index_quotations, begin_date=IndexCollector.ATTENTION_BROAD_INDEXS_BEGIN_DATE, show_mean=False, direct_show=False, flat_policy=StockDataFlatPolicy.QUARTER.value, average_policy=StockDataAveragePolicy.MEAN.value):
+    def standard_output(self, index_quotations, show_mean=False, direct_show=False, flat_policy=StockDataFlatPolicy.QUARTER.value, average_policy=StockDataAveragePolicy.MEAN.value):
         index_quotations = to_container(index_quotations)
         dfs = [pd.DataFrame() for _ in range(4)]
         [df_flat_pe, df_flat_pb, df_mid_pe, df_mid_pb] = dfs
