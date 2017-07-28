@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'study_sun'
 
-__all__ = ["safetofloat", "now_day", "print_container", "next_day", "days_in_range", "LAST_ELEMENT_INDEX",
+__all__ = ["safe_to_float", "now_day", "print_container", "next_day", "days_in_range", "LAST_ELEMENT_INDEX",
            "STAND_DATE_FORMAT", "to_container", "median", "rounded_to", "list_intersection", "list_union", "safe_mean", "before_day"]
 import sys
 from datetime import datetime, timedelta, date
@@ -16,7 +16,7 @@ STAND_DATE_FORMAT = '%Y-%m-%d'
 FIRST_ELEMENT_INDEX = 0
 LAST_ELEMENT_INDEX = -1 # 当然啦,如果没元素会异常哦
 
-def safetofloat(s, df=0.0):
+def safe_to_float(s, df=0.0):
     try:
         return float(s)
     except:
@@ -37,6 +37,8 @@ def before_day(day, input_format=STAND_DATE_FORMAT, output_format=STAND_DATE_FOR
     newdate = date(t.tm_year,t.tm_mon,t.tm_mday) + timedelta(-1)
     return newdate.strftime(output_format)
 
+# 算个几年前,适用于5年段,x年段的指数回溯
+# def
 
 # 返回[begin_date, end_date)的字符串数组哦
 def days_in_range(begin_date, end_date, format=STAND_DATE_FORMAT):

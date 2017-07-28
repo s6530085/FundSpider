@@ -11,6 +11,12 @@ import xlrd
 from datetime import datetime
 from spider_base.convenient import *
 
+# 上证指数变更到 http://www.sse.com.cn/market/sseindex/diclosure/
+# 中证指数变更到
+# 其他杂牌的
+
+# 已完成: 000016
+
 class IndexCollector(object):
 
     DATABASE_TABLE_NAME = 'indexinfo'
@@ -31,7 +37,7 @@ class IndexCollector(object):
 
     # 关注的行业或主题指数
     # 医药100, 中证养老, 中证环保, 中证红利, 全指消费
-    ATTENTION_SECTOR_INDEXS = ['000978', '399812', '000827', '000922', '000990', '399396']
+    ATTENTION_SECTOR_INDEXS = ['000978', '399812', '000827', '000922', '000990']
 
     ATTENTION_INDEXS = ATTENTION_BROAD_INDEXS + ATTENTION_SECTOR_INDEXS
     ATTENTION_BROAD_INDEXS_BEGIN_DATE = '2004-01-01'
@@ -39,6 +45,9 @@ class IndexCollector(object):
 
     TEST_ATTENTION_INDEXS = ['000905', '000978', '399006']
     TEST_INDEXS_BEGIN_DATE = '2000-01-01'
+
+    #
+    FIVE_YEAR_AGE_DATE = ''
 
     def __init__(self):
         self.db = sqlite3.connect(IndexCollector.DATABASE_NAME)
@@ -122,21 +131,31 @@ class IndexCollector(object):
                 if IndexCollector.ALL_INDEXS.__contains__(file_name):
                     print 'load index change ' + file_name
                     self._load_index_constituent(root+f, file_name)
+                    # 2017年前的指数调整是一张表里的,但是之后没有vip权限下载不了,只能分批获取了
+                    self._update_index_constituent()
+
 
     # 指数的剔除和纳入不是同一天哦,暂时按超过10天算更迭了
     def _in_index_change_range(self, current, last):
         days = (datetime.strptime(current, STAND_DATE_FORMAT) - datetime.strptime(last, STAND_DATE_FORMAT)).days
         return days > 10
 
+    # 初始的excel是软件导出的,后来就是手工填写的,没办法很多格式需要做一下兼容
     def _load_index_constituent(self, file_path, index_code):
         self._create_constituent_table(index_code)
         excel = xlrd.open_workbook(file_path)
         sheet = excel.sheets()[0]
         current_date = ''
         current_constituent = []
-        for row in range(1, sheet.nrows-6):
+        # 有的最后一行处理了,有的没有,先看看最后一行是不是
+        row_indent = 1
+        if sheet.cell(sheet.nrows-row_indent, 0).value == u'数据来源：东方财富Choice数据':
+            row_indent = 6
+        for row in range(1, sheet.nrows-row_indent):
             # 喷了,结果这里的时间就是直接是字符串
             row_date = sheet.cell(row, 1).value
+            if isinstance(row_date, float):
+                row_date = datetime(*xlrd.xldate_as_tuple(row_date, excel.datemode)).strftime(STAND_DATE_FORMAT)
             #第1条先设置初始时间,以后每次时间不一致就算一次成分股变更
             if row == 1:
                 current_date = row_date
@@ -162,7 +181,8 @@ class IndexCollector(object):
                 current_constituent.remove(stock_code)
 
     # 刷新指数的成分信息,不过现在没这个数据好气啊,可能会从东方财富那里更新
-    def update_index_constituent(self):
+    # 当然有些数据已经同化到一张表里了,只有那些不好处理的才单独用表
+    def _update_index_constituent(self):
         pass
 
 if __name__ == '__main__':

@@ -43,8 +43,9 @@ class IndexMain(object):
         # 标准输出就只打那些我关注的指数啦
         # 后来发现所有关注的指数一下子输出实在有点看不清,就分宽基和宅基分别输出了
         # self.outputer.standard_output(self.analysis.query_indexs(IndexCollector.ATTENTION_BROAD_INDEXS, IndexCollector.ATTENTION_BROAD_INDEXS_BEGIN_DATE), True, False)
+        index = ['000016', '000978']#IndexCollector.ATTENTION_BROAD_INDEXS
         self.outputer.standard_output(self.analysis.query_indexs(
-            IndexCollector.ATTENTION_BROAD_INDEXS,
+            index,
             IndexCollector.ATTENTION_BROAD_INDEXS_BEGIN_DATE),
             show_mean=True,
             direct_show=True)
@@ -54,7 +55,7 @@ if __name__ == '__main__':
     # 指数是建立在个股基础上的,所以要先获取个股信息
     # stock_incremental = True
     # sm = StockMain('..'+os.sep+'stock'+os.sep)
-    # sm.crawl(stock_incremental)
+    # sm.crawl(stock_incremental)index
 
     # index_incremental = False
     im = IndexMain()

@@ -56,6 +56,7 @@ class FundAnalysis(SBAnalysis):
         sql += ';'
         return self.query(sql)
 
+
     #这个是直接写好sql传啦.理论上都是最后调这个的哦
     def query(self, sql):
         result = self.db.cursor().execute(sql)
@@ -65,6 +66,7 @@ class FundAnalysis(SBAnalysis):
             f.parse_sqlresult(item)
             results.append(f)
         return results
+
 
     # 现在增加了持股比例,所以是传递的票综合起来最多的排前面,但无法处理那种你关注两个票a,b,其中A基金有9%的a,1%的b,B基金有1%的a,10%的b
     # 他们的排名会B会在A前的,可a其实涨了10%,而b涨了2%,实际上我希望是A在前面才好,这只能要么加权重,要么自己看了
@@ -81,6 +83,8 @@ class FundAnalysis(SBAnalysis):
             fundinfo.inter = 0
             if len(fundinfo.stocks) > 1:
                 for (index, stock_per) in enumerate(fundinfo.stocks):
+                    if len(stock_per.split('-')) != 2:
+                        continue
                     stock, per = stock_per.split('-')
                     if stock in stocks:
                         # 如果没权重就当1了
@@ -92,6 +96,7 @@ class FundAnalysis(SBAnalysis):
         results.sort(lambda x,y: int(y.inter-x.inter))
         return results[0:cap]
 
+
 def _printfunds(funds, simplify=True):
     print 'funds count is ' + str(len(funds))
     for fund in funds:
@@ -102,9 +107,10 @@ def _printfunds(funds, simplify=True):
         else:
             print fund
 
+
 if __name__ == "__main__":
     a = FundAnalysis()
-    _printfunds(a.querytrack('中证500'))
+    _printfunds(a.queryname('银行'))
     # printfunds(a.queryname('景顺长城沪深300'),False)
     # for a,b in enumerate('a,b,c'):
     #     print a, b

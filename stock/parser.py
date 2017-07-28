@@ -83,12 +83,12 @@ class StockParser(object):
             if len(StockParser.TODAY_DATE) == 0:
                 quotation_info.s_date = datetime.datetime.now().strftime("%Y-%m-%d")
         else:
-            quotation_info.pe_ttm = safetofloat(quotation['pe_ttm'])
-            quotation_info.pb = safetofloat(quotation['pb'])
-            quotation_info.pe = safetofloat(quotation['pe_lyr'])
-            quotation_info.opening_price = safetofloat(quotation['open'])
-            quotation_info.closing_price = safetofloat(quotation['close'])
-            quotation_info.yield_rate = safetofloat(quotation['yield'])
+            quotation_info.pe_ttm = safe_to_float(quotation['pe_ttm'])
+            quotation_info.pb = safe_to_float(quotation['pb'])
+            quotation_info.pe = safe_to_float(quotation['pe_lyr'])
+            quotation_info.opening_price = safe_to_float(quotation['open'])
+            quotation_info.closing_price = safe_to_float(quotation['close'])
+            quotation_info.yield_rate = safe_to_float(quotation['yield'])
             #time的格式很怪,形如"time": "Wed Mar 08 14:59:50 +0800 2017",
             if len(StockParser.TODAY_DATE) == 0:
                 StockParser.TODAY_DATE = datetime.datetime.strptime(quotation['time'], '%a %b %d %X +0800 %Y').strftime("%Y-%m-%d")

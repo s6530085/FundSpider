@@ -32,8 +32,8 @@ class FundMain(object):
             if not incremental or not self.collector.fundexist(fund_info_code):
                 self.url_manager.add_url(fund_info_code)
                 count += 1
-        # self.url_manager.add_url("100032")
-        # self.url_manager.add_url("163111")
+        # self.url_manager.add_url("168401")
+        # self.url_manager.add_url("000478")
 
         print '共需爬取基金详情 ' + str(count) + " 个"
 
@@ -80,4 +80,4 @@ class FundMain(object):
 
 if __name__ == "__main__":
     icMain = FundMain()
-    icMain.crawl('http://fund.eastmoney.com/allfund.html', True)
+    icMain.crawl('http://fund.eastmoney.com/allfund.html', False)

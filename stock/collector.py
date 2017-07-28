@@ -6,7 +6,7 @@ import datetime
 import xlrd
 import os
 from entity import StockInfo, StockQuotation
-from spider_base.convenient import safetofloat
+from spider_base.convenient import safe_to_float
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -212,7 +212,7 @@ class StockCollector(object):
                         else:
                             date_tuple = xlrd.xldate_as_tuple(date_data, 0)
                             date = '{}-{:0>2}-{:0>2}'.format(date_tuple[0], date_tuple[1], date_tuple[2])
-                            ss.append((date, safetofloat(pe), safetofloat(pb)))
+                            ss.append((date, safe_to_float(pe), safe_to_float(pb)))
                 else:
                     print 'code ' + code + " not in eastmoney"
                 if len(ss) > 0:

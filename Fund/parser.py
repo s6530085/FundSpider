@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 from lxml import etree
-from spider_base.convenient import safetofloat
+from spider_base.convenient import safe_to_float
 from entity import FundInfo
 import sys
 
@@ -93,7 +93,7 @@ class FundParser(object):
                 #某些基金新开或者其他原因没有规模
                 if len(value.split(u'亿')) > 0:
                     value = value.split(u'亿')[0]
-                info.size = safetofloat(value)
+                info.size = safe_to_float(value)
             #这里是个超链接
             elif key == FundInfo.COMPANY_CHINESE_KEY:
                 info.company = value
@@ -110,22 +110,22 @@ class FundParser(object):
                 info.track = value
             elif key == FundInfo.MANAGE_FEE_CHINESE_KEY:
                 if len(value.split("%")) > 0:
-                    info.fee += safetofloat(value.split('%')[0])
+                    info.fee += safe_to_float(value.split('%')[0])
             elif key == FundInfo.COSTODY_FEE_CHINESE_KEY:
                 if len(value.split("%")) > 0:
-                    info.fee += safetofloat(value.split('%')[0])
+                    info.fee += safe_to_float(value.split('%')[0])
             elif key == FundInfo.BUY_FEE_CHINESE_KEY:
                 #这里比较复杂,可能有天天基金的打折信息,先看看有没有打折吧
                 spans = tds[index].xpath('.//span')
                 if len(spans) == 3:
-                    info.fee += safetofloat(spans[2].text.split("%")[0])
+                    info.fee += safe_to_float(spans[2].text.split("%")[0])
                 elif len(spans) == 0:
                     if len(value.split("%")) > 0:
-                        info.fee += safetofloat(value.split('%')[0])
+                        info.fee += safe_to_float(value.split('%')[0])
 
             elif key == FundInfo.SELL_FEE_CHINESE_KEY:
                 if len(value.split("%")) > 0:
-                    info.fee += safetofloat(value.split('%')[0])
+                    info.fee += safe_to_float(value.split('%')[0])
 
         #然后是几个大的
         divs = html.xpath(u'//div[@class="boxitem w790"]//h4//label[@class="left" and text() != "基金分级信息"]')
@@ -149,11 +149,11 @@ class FundParser(object):
             #这里有点疑问，我以为机构持有人里是包含内部持有人的，但目前发现一个基金http://fund.eastmoney.com/f10/cyrjg_510090.html内部持有人>机构持有人，但大部分基金是机构+个人=100%，且内部<=基金，不知道哪里出了问题
             insito = tds[0].text
             if insito != '---':
-                info.inratio += safetofloat(insito.split("%")[0])
+                info.inratio += safe_to_float(insito.split("%")[0])
             # innerto = tds[2].text
             # if innerto != '---':
-            #     self.inratio += safetofloat(innerto.split("%")[0])
-            # self.inratio = safetofloat(.split('%')[0]) + safetofloat(tds[2].text.split('%')[0])
+            #     self.inratio += safe_to_float(innerto.split("%")[0])
+            # self.inratio = safe_to_float(.split('%')[0]) + safe_to_float(tds[2].text.split('%')[0])
 
     #解析标准差夏普率等,当然可能是没有的
     def parse_statistic(self, info, content):
@@ -172,25 +172,25 @@ class FundParser(object):
                     for stdnum in stds:
                         #只有1,2,3年的数值,而且可能新基金连1年的都没有,需要判断下,以最多年的数据为准,下同
                         if stdnum.text != '--':
-                            info.std = safetofloat(stdnum.text.split('%')[0])
+                            info.std = safe_to_float(stdnum.text.split('%')[0])
                             break
                 elif tds[0].text == FundInfo.SHARPERATIO_CHINESE_KEY:
                     sharpes = reversed(tds[1:4])
                     for sharpenum in sharpes:
                         if sharpenum.text != '--':
-                            info.sharperatio = safetofloat(sharpenum.text)
+                            info.sharperatio = safe_to_float(sharpenum.text)
                             break
                 elif tds[0].text == FundInfo.INFORATIO_CHINESE_KEY:
                     infos = reversed(tds[1:4])
                     for infonum in infos:
                         if infonum.text != '--':
-                            info.inforatio = safetofloat(infonum.text)
+                            info.inforatio = safe_to_float(infonum.text)
                             break
 
         #只有指数基金才有追踪误差哦
         trackbias = html.xpath(u'//div[@id="jjzsfj"]//table[@class="fxtb"]//td')
         if len(trackbias) == 3:
-            info.bias = safetofloat(trackbias[1].text.split('%')[0])
+            info.bias = safe_to_float(trackbias[1].text.split('%')[0])
 
         #投资风格,当然也可能没有
         styles = html.xpath('//table[@class="fgtb"]//td')
@@ -207,19 +207,23 @@ class FundParser(object):
             #懒得记录编号了,直接用名字
             stocktds = tbs[0].xpath('.//td[@class="tol"]/a')
             pers = tbs[0].xpath('.//td[@class="tor"]')
-            # 擦,个别网页缺少元素,不能直接用5做间隔
-            interval = 5
+            # 新基金没有成分股的变动,缺少元素,不能直接用5做间隔
+            front, interval = 2, 5
             if not '最新价' in content:
-                interval = 3
+                front, interval = 0, 3
             for (index, stocked) in enumerate(stocktds):
                 # info.stocks.append(stocked.text)
                 # tor的太多了,我只需要其中第三个
-                per = pers[index*interval+2]
+                per = pers[index*interval+front]
+                # 有这种奇葩的可能 "进入上市公司的十大流通股东却没有进入单只基金前十大重仓股的个股" 没办法只好去掉了
+                if per == '---':
+                    continue
                 # 懒得再做一个字段了,就用[国投电力-3.6%,川投能源-4.1%]这种形式了
                 # 不过网站有时候有bug,会没有文本,只好防范一下
                 stockname = stocked.text
                 if not stockname is None and len(stockname) > 0:
                     info.stocks.append(stockname + '-' + per.text)
+
 
     def parse_annual(self, info, content):
         #需要小心的是,收益算年化,排名则是算术平均值,以及没有数值不能简单地以0替代,否则会有偏差
@@ -236,7 +240,7 @@ class FundParser(object):
             for yearyield in yieldtds[1:]:
                 y = yearyield.text
                 if y != '---':
-                    yieldvalue *= (1 + safetofloat(y.split('%')[0])/100)
+                    yieldvalue *= (1 + safe_to_float(y.split('%')[0]) / 100)
                     yieldpow += 1
             #如果一个都没有就别算了
             if yieldpow != 0.0:
@@ -248,7 +252,7 @@ class FundParser(object):
             for ranktd in ranktds[1:]:
                 r = ''.join(ranktd.itertext()).strip()
                 if r != '---':
-                    rankvalue += safetofloat(r.split('|')[0]) / safetofloat(r.split('|')[1])
+                    rankvalue += safe_to_float(r.split('|')[0]) / safe_to_float(r.split('|')[1])
                     rankcount += 1
             if rankcount > 0:
                 info.annualrank = rankvalue / rankcount
