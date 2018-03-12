@@ -137,7 +137,7 @@ class StockCollector(object):
             stock_info.market,
             stock_info.industry,
             stock_info.area,
-            stock_info.releasedate,
+            stock_info.release_date,
             stock_info.url
         )
         self.db.execute(sql)

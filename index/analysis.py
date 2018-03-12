@@ -167,7 +167,7 @@ class IndexAnalysis(SBAnalysis):
 
 if __name__ == '__main__':
     a = IndexAnalysis()
-    print_container(a.stock_in_index('300072'))
+    # print_container(a.stock_in_index('000651'))
     # print a.query_index_constituents_at_date('000827', now_day())
     # a.query_stocks_in_constituents(['002259'], '000827')
     # index_quotation = a.query_indexs(['000978'], '2010-01-01')

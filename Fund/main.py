@@ -32,8 +32,6 @@ class FundMain(object):
             if not incremental or not self.collector.fundexist(fund_info_code):
                 self.url_manager.add_url(fund_info_code)
                 count += 1
-        # self.url_manager.add_url("168401")
-        # self.url_manager.add_url("000478")
 
         print '共需爬取基金详情 ' + str(count) + " 个"
 
@@ -81,3 +79,50 @@ class FundMain(object):
 if __name__ == "__main__":
     icMain = FundMain()
     icMain.crawl('http://fund.eastmoney.com/allfund.html', False)
+
+    # url_manager = SBURLManager()
+    # # http://m.zhcw.com/clienth5.do?lottery=FC_SSQ&kjissue=2005001&transactionType=300302&src=0000100001%7C6000003060
+    # for year in range(2005, 2018):
+    #     for index in range(1, 160):
+    #         url_manager.add_url("http://m.zhcw.com/clienth5.do?lottery=FC_SSQ&kjissue=" + str(year) + '{0:03}'.format(index) + "&transactionType=300302&src=0000100001%7C6000003060")
+    #
+    # import json
+    # downloader = SBDownloader()
+    # parse_count = 0
+    # areaDic = dict()
+    # while (not url_manager.is_empyt()):
+    #     url = url_manager.pop_url()
+    #     content = downloader.download(url)
+    #     # 懒得重试了哦
+    #     if content is not None and len(content) > 0:
+    #         d = json.loads(content)
+    #         l = d.get("dataList", None)
+    #         if l is not None:
+    #             parse_count += 1
+    #             for info in l:
+    #                 area = info['dqname']
+    #                 ones = int(info["onez"])
+    #                 money = int(info['tzmoney'])
+    #                 sum = areaDic.get(area, None)
+    #                 if sum is None:
+    #                     areaDic[area] = (ones, money)
+    #                 else:
+    #                     areaDic[area] = (sum[0] + ones, sum[1] + money)
+    #
+    # # 最后输出结果
+    # print "统计双色球地域特性共" + str(parse_count) + "期"
+    #
+    # areaResult = dict()
+    # for area in areaDic:
+    #     count = areaDic[area][0]
+    #     money = areaDic[area][1]
+    #     if count > 0:
+    #         average = money / count
+    #     else :
+    #         average = 10000000000
+    #     # print area + '购买彩票共' + str(money) + '元, 共', str(count) + "人中头奖, 平均每花" + average + "出一个头奖嘻嘻"
+    #     areaResult[area] = average
+    #
+    # print '按照平均花费中头奖金额排序:'
+    # for key, value in sorted(areaResult.iteritems(), key=lambda (k,v): (v,k)):
+    #     print "%s每花%d万可出一个头奖" % (key, value/10000)

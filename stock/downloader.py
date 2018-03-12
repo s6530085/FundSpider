@@ -33,13 +33,15 @@ class StockDownloader(SBDownloader):
                    "Connection": "keep-alive"}
         self.snowball_session = requests.session()
         headers['Referer'] = "https://xueqiu.com/"
-        login_url = "https://xueqiu.com/user/login"
+        login_url = "https://xueqiu.com/account/login"
+
+
         postdata = {"areacode": "86",
                     "password": get_md5('jisilu4daibi'),
                     "remember_me": "on",
                     "username": "s6530085@hotmail.com"}
         #先登录
-        self.snowball_session.post(login_url, data=postdata, headers=headers)
+        rl = self.snowball_session.post(login_url, data=postdata, headers=headers)
         #再看看登录成功了没
         log = self.snowball_session.get("https://xueqiu.com/setting/user", headers=headers)
         pa = r'"profile":"/(.*?)","screen_name":"(.*?)"'

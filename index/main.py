@@ -43,7 +43,7 @@ class IndexMain(object):
         # 标准输出就只打那些我关注的指数啦
         # 后来发现所有关注的指数一下子输出实在有点看不清,就分宽基和宅基分别输出了
         # self.outputer.standard_output(self.analysis.query_indexs(IndexCollector.ATTENTION_BROAD_INDEXS, IndexCollector.ATTENTION_BROAD_INDEXS_BEGIN_DATE), True, False)
-        index = ['000016', '000978']#IndexCollector.ATTENTION_BROAD_INDEXS
+        index = ['000300']#IndexCollector.ATTENTION_BROAD_INDEXS
         self.outputer.standard_output(self.analysis.query_indexs(
             index,
             IndexCollector.ATTENTION_BROAD_INDEXS_BEGIN_DATE),

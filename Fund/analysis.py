@@ -20,11 +20,17 @@ class FundAnalysis(SBAnalysis):
     def querycode(self, code, order='', isasc=True):
         return self.querybycol(FundInfo.CODE_KEY, code, order, isasc)
 
+    def queryshortname(self, name, order='', isasc=True):
+        return self.querybycol(FundInfo.SHORTNAME_KEY, name, order, isasc)
+
     def queryname(self, name, order='', isasc=True):
         return self.querybycol(FundInfo.NAME_KEY, name, order, isasc)
 
     def querytrack(self, track, order='', isasc=True):
         return self.querybycol(FundInfo.TRACK_KEY, track, order, isasc)
+
+    def querycompare(self, track, order='', isasc=True):
+        return self.querybycol(FundInfo.COMPARE_KEY, track, order, isasc)
 
     def querystyle(self, style, order="", isasc=True):
         return self.querybycol(FundInfo.STYLE_KEY, style, order, isasc)
@@ -79,6 +85,9 @@ class FundAnalysis(SBAnalysis):
             f = FundInfo()
             f.parse_sqlresult(item)
             results.append(f)
+        # 还是应该只统计真有的基金,否则意义不大了
+        real_results = []
+
         for fundinfo in results:
             fundinfo.inter = 0
             if len(fundinfo.stocks) > 1:
@@ -93,9 +102,38 @@ class FundAnalysis(SBAnalysis):
                             fundinfo.inter += float(per.split('%')[0]) * float(weights[i])
                         else:
                             fundinfo.inter += float(per.split('%')[0])
-        results.sort(lambda x,y: int(y.inter-x.inter))
-        return results[0:cap]
+            if fundinfo.inter > 0:
+                real_results.append(fundinfo)
+        real_results.sort(lambda x,y: int(y.inter-x.inter))
+        return real_results[0:cap]
 
+    # 获取某股的机构持有量,当然只能靠前十大持股粗略估计
+    def querystockinstitutehold(self, stock):
+        all = self.db.cursor().execute('SELECT * FROM {table}'.format(table=FundCollector.DATABASE_TABLE_NAME))
+        hold = 0
+        for item in all:
+            f = FundInfo()
+            f.parse_sqlresult(item)
+            if len(f.stocks) > 1:
+                for (index, stock_per) in enumerate(f.stocks):
+                    if len(stock_per.split('-')) != 2:
+                        continue
+                    s, per = stock_per.split('-')
+                    if s == stock:
+                        hold += float(per.split('%')[0]) * f.size
+
+        return hold
+
+     # self.inratio = sqlresult[12]
+     #    self.std = sqlresult[13]
+     #    self.sharperatio = sqlresult[14]
+     #    self.inforatio = sqlresult[15]
+     #    self.bias = sqlresult[16]
+     #    self.stocks = sqlresult[17].split(u',')
+     #    self.annualyield = sqlresult[18]
+     #    self.annualrank = sqlresult[19]
+     #    self.style = sqlresult[20]
+     #    self.fee = sqlresult[21]
 
 def _printfunds(funds, simplify=True):
     print 'funds count is ' + str(len(funds))
@@ -103,17 +141,15 @@ def _printfunds(funds, simplify=True):
         if simplify:
             print fund.code, fund.shortname, fund.url, fund.track, fund.compare,
             print_container(fund.stocks, ' ')
-            print ''
+            print "规模" + str(fund.size) + "亿", "年化收益率" + str(int(fund.annualyield*100)) + "%", "收益排名前" + str(int(fund.annualrank*100)) + "%", "夏普率" + str(fund.sharperatio*100)+"%", "追踪偏差" + str(fund.bias*100) + '%\n'
         else:
             print fund
 
 
 if __name__ == "__main__":
     a = FundAnalysis()
-    _printfunds(a.queryname('银行'))
-    # printfunds(a.queryname('景顺长城沪深300'),False)
+    _printfunds(a.querycompare("中证红利"),True)
     # for a,b in enumerate('a,b,c'):
     #     print a, b
-    # printfunds(a.querystocks(['国投电力', '川投能源']))
     # printfunds(a.querycode('161227'), False)
     # _printfunds(a.querymanager('杨飞', '国泰'))

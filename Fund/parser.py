@@ -49,9 +49,10 @@ class FundParser(object):
         ths = html.xpath('//table//th')
         tds = html.xpath('//table//td')
         for index, th in enumerate(ths):
-            key = th.text.strip()
-            if len(key) == 0:
+            key = th.text
+            if key is None or not isinstance(key, basestring) or len(key) == 0:
                 continue
+            key = key.strip()
             if tds[index].text == None:
                 alist = tds[index].xpath('./a')
                 if len(alist) > 0:
@@ -131,8 +132,14 @@ class FundParser(object):
         divs = html.xpath(u'//div[@class="boxitem w790"]//h4//label[@class="left" and text() != "基金分级信息"]')
         ps = html.xpath('//div[@class="boxitem w790"]//p')
         for (index, div) in enumerate(divs):
-            key = div.text.strip()
-            value = ps[index].text.strip()
+            key = div.text
+            if key is None or not isinstance(key, basestring) or len(key) == 0:
+                continue
+            key = key.strip()
+            value = ps[index].text
+            if value is None or not isinstance(value, basestring) or len(value) == 0:
+                continue
+            value = value.strip()
             # if key == FundInfo.TACTICS_CHINESE_KEY:
             #     self.tactics = value
             if key == FundInfo.LIMITS_CHINESE_KEY:

@@ -90,6 +90,23 @@ class StockMain(object):
         self.url_manager.output_faileds()
 
 
+def random_rich(count, init, round):
+    a = list()
+    # 一上来每个人都有init元
+    for i in count:
+        a.append(init)
+    # 开始round轮的公平随机输赢
+    for i in round:
+        for n in count:
+            # 已经为0就出局了
+            if a[n] == 0:
+                continue
+
+
+    # 最后打印出结果
+    print "最后结果为: "
+    print a
+
 if __name__ == "__main__":
     sk = StockMain()
     sk.crawl(incremental=True)

@@ -62,7 +62,7 @@ class StockParser(object):
                 stock.area = value
             # 很奇怪,东方财富是不是网站出问题了,很多退市的公司基础信息都没了,
             elif key == StockInfo.RELEASE_DATE_CHINESE_KEY:
-                stock.releasedate = value
+                stock.release_date = value
         return stock
 
     TODAY_DATE = ''
@@ -97,5 +97,8 @@ class StockParser(object):
 
 
 if __name__ == "__main__":
-    d = datetime.datetime.strptime("Wed Mar 08 14:59:50 +0800 2017", )
-    print d
+    # d = datetime.datetime.strptime("Wed Mar 08 14:59:50 +0800 2017", )
+    # print d
+    d = StockInfo()
+    d[StockInfo.RELEASE_DATE_KEY] = 'aaaa'
+    print d.release_date
