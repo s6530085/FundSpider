@@ -32,13 +32,14 @@ class FundParser(object):
         return l
 
     #这里是解析每个基金的详情了,获得的东西很多,反正都在dict里,键可能会逐步增加,根据未来需要分析的东西扩展
-    def parse_fund(self, basecontent, ratiocontent, statisticcontent, stockcontent, annualcontent, fundurl):
+    def parse_fund(self, basecontent, ratiocontent, statisticcontent, stockcontent, annualcontent, fundurl, assetcontent):
         fund_info = FundInfo()
         self.parse_base(fund_info, basecontent)
         self.parse_ratio(fund_info, ratiocontent)
         self.parse_statistic(fund_info, statisticcontent)
         self.parse_stocks(fund_info, stockcontent)
         self.parse_annual(fund_info, annualcontent)
+        self.parse_asset(fund_info, assetcontent)
         fund_info.url = fundurl
         return fund_info
 
@@ -259,10 +260,34 @@ class FundParser(object):
             for ranktd in ranktds[1:]:
                 r = ''.join(ranktd.itertext()).strip()
                 if r != '---':
-                    rankvalue += safe_to_float(r.split('|')[0]) / safe_to_float(r.split('|')[1])
-                    rankcount += 1
+                    rankself = safe_to_float(r.split('|')[0])
+                    rankall = safe_to_float(r.split('|')[1])
+                    if rankall > 0:
+                        rankvalue += rankcount / rankall
+                        rankcount += 1
             if rankcount > 0:
                 info.annualrank = rankvalue / rankcount
+
+    #获取占净比
+    def parse_asset(self, info, content):
+        html = etree.HTML(content, parser=etree.HTMLParser(encoding='utf-8'))
+        trs = html.xpath('//table[@class="w782 comm tzxq"]/tbody/tr')
+        if len(trs) > 0:
+            #也是只取最近的即可
+            tds = trs[0].xpath('./td[@class="tor"]')
+            if len(tds) == 4:
+                sr = tds[0].text.strip()
+                if sr != '---':
+                    info.stockratio = safe_to_float(sr.split('%')[0])
+
+                br = tds[1].text.strip()
+                if br != '---':
+                    info.bondratio = safe_to_float(br.split('%')[0])
+
+                cr = tds[2].text.strip()
+                if cr != "---":
+                    info.cashratio = safe_to_float(cr.split("%")[0])
+
 
 if __name__ == "__main__":
     pass

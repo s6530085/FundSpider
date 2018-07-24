@@ -62,6 +62,8 @@ class FundAnalysis(SBAnalysis):
         sql += ';'
         return self.query(sql)
 
+    #
+
 
     #这个是直接写好sql传啦.理论上都是最后调这个的哦
     def query(self, sql):
@@ -148,7 +150,8 @@ def _printfunds(funds, simplify=True):
 
 if __name__ == "__main__":
     a = FundAnalysis()
-    _printfunds(a.querycompare("中证红利"),True)
+    _printfunds(a.querykeyword("神奇公式"))
+    # _printfunds(a.querystocks(["碧水源"]))
     # for a,b in enumerate('a,b,c'):
     #     print a, b
     # printfunds(a.querycode('161227'), False)

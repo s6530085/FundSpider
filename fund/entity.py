@@ -96,13 +96,21 @@ class FundInfo(SBObject):
     BUY_FEE_CHINESE_KEY = u'最高申购费率'
     SELL_FEE_CHINESE_KEY = u'最高赎回费率'
 
+    #资产配置,即基金的股票债券和基金的占比,而我的主要目的用于观察整个市场的热度
+    STOCK_RATIO_KEY = u'stockratio'
+    STOCK_RATIO_CHINESE_KEY = u'股票占净比'
+    BOND_RATIO_KEY = u'bondratio'
+    BOND_RATIO_CHINESE_KEY = u'债券占净比'
+    CASH_RATIO_KEY = u'cashratio'
+    CASH_RATIO_CHINESE_KEY = u'现金占净比'
+
     @classmethod
     def all_keys(cls):
         return [FundInfo.CODE_KEY, FundInfo.NAME_KEY, FundInfo.SHORTNAME_KEY, FundInfo.TYPE_KEY, FundInfo.RELEASETIME_KEY,
                 FundInfo.SIZE_KEY, FundInfo.COMPANY_KEY, FundInfo.MANAGER_KEY, FundInfo.COMPARE_KEY, FundInfo.TRACK_KEY,
                 FundInfo.URL_KEY, FundInfo.INRATIO_KEY, FundInfo.STD_KEY, FundInfo.SHARPERATIO_KEY, FundInfo.INFORATIO_KEY,
                 FundInfo.BIAS_KEY, FundInfo.STOCKS_KEY, FundInfo.ANNUALYIELD_KEY, FundInfo.ANNUALRANK_KEY, FundInfo.STYLE_KEY,
-                FundInfo.FEE_KEY]
+                FundInfo.FEE_KEY, FundInfo.STOCK_RATIO_KEY, FundInfo.BOND_RATIO_KEY, FundInfo.CASH_RATIO_KEY]
 
     @classmethod
     def all_desc_keys(cls):
@@ -111,7 +119,7 @@ class FundInfo(SBObject):
                 FundInfo.COMPARE_CHINESE_KEY, FundInfo.TRACK_CHINESE_KEY, FundInfo.URL_CHINESE_KEY, FundInfo.INRATIO_CHINESE_KEY,
                 FundInfo.STD_CHINESE_KEY, FundInfo.SHARPERATIO_CHINESE_KEY, FundInfo.INFORATIO_CHINESE_KEY, FundInfo.BIAS_CHINESE_KEY,
                 FundInfo.STOCKS_CHINESE_KEY, FundInfo.ANNUALYIELD_CHINESE_KEY, FundInfo.ANNUALRANK_CHINESE_KEY,
-                FundInfo.STYLE_CHINESE_KEY, FundInfo.FEE_CHINESE_KEY]
+                FundInfo.STYLE_CHINESE_KEY, FundInfo.FEE_CHINESE_KEY, FundInfo.STOCK_RATIO_CHINESE_KEY, FundInfo.BOND_RATIO_CHINESE_KEY, FundInfo.CASH_RATIO_CHINESE_KEY]
 
     def __init__(self):
         self.code = u''
@@ -137,6 +145,9 @@ class FundInfo(SBObject):
         self.annualrank = 1.0  # 为什么默认值为1呢,因为这个数值是越小越好,结果默认就是0的话,在排序时就可能搞的没数据的反而排最前面了
         self.style = u''
         self.fee = 0.0
+        self.stockratio = 0.0
+        self.bondratio = 0.0
+        self.cashratio = 0.0
 
     #简单的就只打印编号,简称和url
     def short_desc(self):
@@ -166,6 +177,9 @@ class FundInfo(SBObject):
         self.annualrank = sqlresult[19]
         self.style = sqlresult[20]
         self.fee = sqlresult[21]
+        self.stockratio = sqlresult[22]
+        self.bondratio = sqlresult[23]
+        self.cashratio = sqlresult[24]
 
     # 现在的stocks 是 [华中科技-3.5%,]的形式,提供个纯粹名字数组的方法吧
     def get_raw_stocks(self):

@@ -10,7 +10,8 @@ class FundURLIndex(Enum):
     STATISTIC = 3 #特色统计如标准差
     STOCKS = 4 #持仓
     ANNUAL = 5 #年度收益
-    CODE = 6 #编号
+    ASSET = 6 #资产配置
+    CODE = 7 #编号
 
 class FundURLManager(SBURLManager):
 
@@ -29,4 +30,5 @@ class FundURLManager(SBURLManager):
                 "http://fund.eastmoney.com/f10/tsdata_" + code + '.html',\
                 "http://fund.eastmoney.com/f10/FundArchivesDatas.aspx?type=jjcc&code=" + code + "&topline=20",\
                 "http://fund.eastmoney.com/f10/FundArchivesDatas.aspx?type=yearzf&code=" + code,\
+                "http://fund.eastmoney.com/f10/zcpz_" + code + ".html",\
                 code]

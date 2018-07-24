@@ -55,6 +55,17 @@ class StockDownloader(SBDownloader):
             self.snowball_headers = headers
             return True
 
+    def cookie_login(self):
+        import browsercookie
+        self.snowball_cookie = browsercookie.chrome()
+        agent = 'Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'
+        self.snowball_headers = {'User-Agent': agent,
+                   'Host': "xueqiu.com",
+                   "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                   "Accept-Encoding": "gzip, deflate, sdch, br",
+                   "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.6",
+                   "Connection": "keep-alive"}
+
 
     def download(self, url):
         #如果是雪球的网址,还得先登录哦
@@ -63,8 +74,8 @@ class StockDownloader(SBDownloader):
 
         if url_is_snowball(url):
             if not self.snowball_logined:
-                self.login_snowball()
-            return super(StockDownloader, self).download(url, self.snowball_session, self.snowball_headers)
+                self.cookie_login()
+            return super(StockDownloader, self).download(url, self.snowball_cookie, self.snowball_headers)
         else:
             return super(StockDownloader, self).download(url)
 
