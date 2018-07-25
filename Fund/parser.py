@@ -229,7 +229,9 @@ class FundParser(object):
                 # 懒得再做一个字段了,就用[国投电力-3.6%,川投能源-4.1%]这种形式了
                 # 不过网站有时候有bug,会没有文本,只好防范一下
                 stockname = stocked.text
+                #想不到吧,有时候股票名也会带引号嘻嘻,比如VITASOY INT'L
                 if not stockname is None and len(stockname) > 0:
+                    stockname = stockname.replace('"', ',').replace("'", ",")
                     info.stocks.append(stockname + '-' + per.text)
 
 
