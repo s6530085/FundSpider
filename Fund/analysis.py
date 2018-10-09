@@ -126,6 +126,25 @@ class FundAnalysis(SBAnalysis):
 
         return hold
 
+    # 获取bench某指数的基金们(分主动被动)按收益率排序,默认值0为搜索主动基金,1为指数或联接,2为全部
+    def querysortedbench(self, bench, ftype=0):
+        sql = '''
+        SELECT * FROM {table} WHERE ({compare} LIKE "%{keyword}%" OR {track} LIKE "%{keyword}%")
+        '''.format(table=FundCollector.DATABASE_TABLE_NAME, keyword=bench, compare=FundInfo.COMPARE_KEY, track=FundInfo.TRACK_KEY)
+        # 一般认为股票型和混合型为主动基金,而股票指数和联接算是指数型的
+        if ftype==0:
+            append = '''
+             AND ({type} LIKE "%{stock}%" OR {type} LIKE "%{composition}%")
+            '''.format(type=FundInfo.TYPE_KEY, stock="股票型", composition="混合型")
+            sql += append
+        elif ftype==1:
+            append = '''
+             AND ({type} LIKE "%{index}%" OR {type} LIKE "%{connect}%" OR {type} LIKE "%{etf}%")
+            '''.format(type=FundInfo.TYPE_KEY, index="股票指数", connect="联接", etf="ETF")
+            sql += append
+        sql += " ORDER BY {order} DESC;".format(order=FundInfo.ANNUALYIELD_KEY)
+        return self.query(sql)
+
      # self.inratio = sqlresult[12]
      #    self.std = sqlresult[13]
      #    self.sharperatio = sqlresult[14]
@@ -150,9 +169,10 @@ def _printfunds(funds, simplify=True):
 
 if __name__ == "__main__":
     a = FundAnalysis()
-    _printfunds(a.querykeyword("神奇公式"))
-    # _printfunds(a.querystocks(["碧水源"]))
+    _printfunds(a.querycompare("可转债"))
+    # _printfunds(a.querymanager("杨飞", company="华泰"))
     # for a,b in enumerate('a,b,c'):
     #     print a, b
     # printfunds(a.querycode('161227'), False)
     # _printfunds(a.querymanager('杨飞', '国泰'))
+

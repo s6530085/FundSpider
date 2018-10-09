@@ -107,6 +107,13 @@ def random_rich(count, init, round):
     print "最后结果为: "
     print a
 
+def sameday(count):
+    r = 1
+    for i in range(1, count):
+        r *= (365-i)/365.0
+    return 1 - r
+
+
 if __name__ == "__main__":
     sk = StockMain()
     sk.crawl(incremental=True)

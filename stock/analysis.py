@@ -138,17 +138,17 @@ if __name__ == "__main__":
 
 
     a = StockAnalysis()
-    # print a.last_update_date()
+    print a.last_update_date()
     # print_container(a.translate_codes(['600000', '000002']))
     # print a.translate_names([u'万科A', u'平安银行'])
     # print a.query_stocks_pepb_in_range(['000651'], '2007-01-01', '2017-11-10')
     # print (1, 2, None)
     # print '{name} is {{aa'.format(name='xixi')
     # print_container(a.querybyname(''))
-    ds = a.query_stocks_pepb_in_range(['000651'], '2007-01-01', '2017-11-01')
-    es = 0
-    bs = 0
-    for (d, e, b) in ds:
-        es += e[0]
-        bs += b[0]
-    print '平均pe为' + str(float(es/len(ds))) + ', 平均pb为' + str(float(bs/len(ds)))
+    # ds = a.query_stocks_pepb_in_range(['000651'], '2007-01-01', '2017-11-01')
+    # es = 0
+    # bs = 0
+    # for (d, e, b) in ds:
+    #     es += e[0]
+    #     bs += b[0]
+    # print '平均pe为' + str(float(es/len(ds))) + ', 平均pb为' + str(float(bs/len(ds)))
