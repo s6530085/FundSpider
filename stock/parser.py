@@ -6,6 +6,7 @@ import json
 import datetime
 from entity import StockInfo, StockQuotation
 from spider_base.convenient import *
+import xlrd
 reload(sys)
 sys.setdefaultencoding('utf-8')
 from dateutil import parser
@@ -17,6 +18,17 @@ class StockParser(object):
         #分别是沪市,深市和创业板
         return code.startswith('60') or code.startswith('00') or code.startswith('30')
 
+    #现在改由excel读取股票列表了哦
+    def parse_list_excel(self, filename):
+        listfile = xlrd.open_workbook(filename, on_demand = True)
+        codesheet = listfile.sheet_by_name('sheet 1')
+        codes = codesheet.col_values(0)
+        stocks = []
+        for i in range(2, len(codes)):
+            codename = codes[i]
+            code = codename[2:]
+            stocks.append(code)
+        return stocks
 
     #解析全股票代码,返回形式是[600000,]
     def parse_home(self, content):

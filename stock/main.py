@@ -20,12 +20,15 @@ class StockMain(object):
         self.collector = StockCollector(path)
 
     def crawl(self, incremental=True):
-        homeurl = 'http://quote.eastmoney.com/stocklist.html'
+        # homeurl = 'http://quote.eastmoney.com/stocklist.html'
         #除非指定全量更新,否则都是自动检查是否需要全量的
         #首页怎么都要来一次
-        stock_home = self.downloader.download(homeurl)
-        stocks = self.parser.parse_home(stock_home)
+        # stock_home = self.downloader.download(homeurl)
+        # stocks = self.parser.parse_home(stock_home)
         # stocks = ['000621']
+        stocklisturl = "http://stock.gtimg.cn/data/get_hs_xls.php?id=ranka&type=1&metric=chr";
+        listname = self.downloader.download_file(stocklisturl)
+        stocks = self.parser.parse_list_excel(listname)
         for code in stocks:
             self.url_manager.add_url(code)
         stock_count = len(stocks)
