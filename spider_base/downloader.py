@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 __author__ = 'study_sun'
-# import urllib2
 import requests
-
 import sys
-
+import urllib
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -25,3 +23,10 @@ class SBDownloader(object):
                 return response.text
             else:
                 return None
+
+    def download_file(self, url):
+        if url is None:
+            return None
+        filename = 'stock_list.xls'
+        urllib.urlretrieve(url, filename)
+        return filename
