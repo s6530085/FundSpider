@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 __author__ = 'study_sun'
-from parser import *
 from url_manager import *
 from downloader import *
 from collector import *
-import datetime
+from stock_parser import *
 
 import sys
-
 reload(sys)
 sys.setdefaultencoding('utf-8')
+
 
 class StockMain(object):
 
@@ -112,6 +111,8 @@ def sameday(count):
     for i in range(1, count):
         r *= (365-i)/365.0
     return 1 - r
+
+
 
 
 if __name__ == "__main__":

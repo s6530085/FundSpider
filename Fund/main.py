@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from url_manager import *
 from downloader import *
-from parser import *
+from fund_parser import *
 from collector import *
 from url_manager import FundURLIndex
 

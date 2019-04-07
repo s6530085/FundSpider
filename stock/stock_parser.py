@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 __author__ = 'study_sun'
+
 from lxml import etree
-import sys
 import json
 import datetime
 from entity import StockInfo, StockQuotation
 from spider_base.convenient import *
+
+import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
-from dateutil import parser
+
+
+# from dateutil import parser
 
 class StockParser(object):
 
@@ -16,7 +20,6 @@ class StockParser(object):
     def _isstock(self, code):
         #分别是沪市,深市和创业板
         return code.startswith('60') or code.startswith('00') or code.startswith('30')
-
 
     #解析全股票代码,返回形式是[600000,]
     def parse_home(self, content):
@@ -97,8 +100,6 @@ class StockParser(object):
 
 
 if __name__ == "__main__":
-    # d = datetime.datetime.strptime("Wed Mar 08 14:59:50 +0800 2017", )
-    # print d
-    d = StockInfo()
-    d[StockInfo.RELEASE_DATE_KEY] = 'aaaa'
-    print d.release_date
+    d = StockParser()
+    d.parse_home("aaaaa")
+    print d

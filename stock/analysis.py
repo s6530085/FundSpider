@@ -135,8 +135,6 @@ class StockAnalysis(SBAnalysis):
         return self.db.execute(sql).fetchone()[0]
 
 if __name__ == "__main__":
-
-
     a = StockAnalysis()
     print a.last_update_date()
     # print_container(a.translate_codes(['600000', '000002']))

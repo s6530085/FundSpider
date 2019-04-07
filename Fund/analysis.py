@@ -169,7 +169,7 @@ def _printfunds(funds, simplify=True):
 
 if __name__ == "__main__":
     a = FundAnalysis()
-    _printfunds(a.querycompare("可转债"))
+    _printfunds(a.querytrack('中证银行'))
     # _printfunds(a.querymanager("杨飞", company="华泰"))
     # for a,b in enumerate('a,b,c'):
     #     print a, b
